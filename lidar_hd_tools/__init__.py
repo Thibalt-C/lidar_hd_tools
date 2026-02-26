@@ -6,6 +6,7 @@ Date: 2026-01-06
 '''
 
 
+from lidar_hd_tools.folder_manager import current_folders
 from lidar_hd_tools.lidar_hd_tools import *
 import lidar_hd_tools.visualisation as visualisation
 

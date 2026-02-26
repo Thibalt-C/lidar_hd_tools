@@ -15,6 +15,7 @@ from sklearn.cluster import DBSCAN
 import time
 from lidar_hd_tools.download_LiDARHD_blocs import bloc_finder
 from lidar_hd_tools.download_BD_TOPO import get_bdtopo
+from lidar_hd_tools.folder_manager import lidar_tiles, DSM_tiles, DEM_tiles
 import cmcrameri.cm as cm
 
 
@@ -22,7 +23,8 @@ import cmcrameri.cm as cm
 def download_tiles(dsm_tiles_file='dsm_tiles.txt',
                    dem_tiles_file='dem_tiles.txt',
                    query_mode=False,
-                   tiles_path='tiles/',
+                   dem_tiles_path=DEM_tiles,
+                   dsm_tiles_path=DSM_tiles,
                    relative_index_x = slice(8,12),
                    relative_index_y = slice(13,17),
                    tile_size=2000,
@@ -33,7 +35,8 @@ def download_tiles(dsm_tiles_file='dsm_tiles.txt',
 
     sets = []
 
-    for tiles_file in [dsm_tiles_file, dem_tiles_file]:
+    for tiles_file, tiles_path in zip([dsm_tiles_file, dem_tiles_file],
+                                      [dsm_tiles_path, dem_tiles_path]):
 
         if query_mode:
 
@@ -363,7 +366,7 @@ def decimate_points(las, factor=10):
 
 
 def download_lidar(lidar_requests,
-                   lidar_path='lidar_tiles/',
+                   lidar_path=lidar_tiles,
                    decimation_factor = 10,
                    verbose=True
                    ):
@@ -560,9 +563,10 @@ def routine_from_gdf(gdf,
 
     print("Loading DSM/DEM tiles...")
     sets = download_tiles(dsm_tiles_file=DSM_queries,
-                      dem_tiles_file=DEM_queries,
-                      query_mode=True,
-                      tiles_path=tiles_path,
+                          dem_tiles_file=DEM_queries,
+                          query_mode=True,
+                          dem_tiles_path=DEM_tiles,
+                          dsm_tiles_path=DSM_tiles,
                       decimation_factor=decimation_factor, verbose=False)
 
     if zone==None:
