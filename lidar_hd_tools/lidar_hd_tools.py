@@ -537,9 +537,6 @@ def build(sets, clouds, gdf, resolution, data_for_derivation="DSM"):
 
 
 def routine_from_gdf(gdf,
-                     zone=None,
-                     tiles_path='tiles/',
-                     lidar_tiles_path='lidar_tiles/',
                      decimation_factor=2,
                      lidar_decimation_factor=10,
                      build_dataset=True,
@@ -569,12 +566,11 @@ def routine_from_gdf(gdf,
                           dsm_tiles_path=DSM_tiles,
                       decimation_factor=decimation_factor, verbose=False)
 
-    if zone==None:
-        centroids = [gdf.geometry[i].centroid.coords[0] for i in range(len(gdf))]
-        zones_list = [bloc_finder(lon=centroid[0],lat=centroid[1])[0] for centroid in centroids]
-        dates_list = [bloc_finder(lon=centroid[0],lat=centroid[1])[1] for centroid in centroids]
-        zones = np.unique(zones_list)
-        dates = np.unique(dates_list)
+    centroids = [gdf.geometry[i].centroid.coords[0] for i in range(len(gdf))]
+    zones_list = [bloc_finder(lon=centroid[0],lat=centroid[1])[0] for centroid in centroids]
+    dates_list = [bloc_finder(lon=centroid[0],lat=centroid[1])[1] for centroid in centroids]
+    zones = np.unique(zones_list)
+    dates = np.unique(dates_list)
 
     try:
 
@@ -593,7 +589,7 @@ def routine_from_gdf(gdf,
                                                              DSM_queries[n])
                         cloud = download_lidar(lidar_requests=lidar_request,
                                                decimation_factor=lidar_decimation_factor,
-                                               lidar_path=lidar_tiles_path, verbose=False)
+                                               lidar_path=lidar_tiles, verbose=False)
                         clouds.append(cloud[0])
                         ok = True
                     except:
@@ -613,7 +609,7 @@ def routine_from_gdf(gdf,
                                                           DSM_queries)
                     clouds = download_lidar(lidar_requests=lidar_requests,
                                             decimation_factor=lidar_decimation_factor,
-                                            lidar_path=lidar_tiles_path, verbose=False)
+                                            lidar_path=lidar_tiles, verbose=False)
                     ok = True
                 except:
 

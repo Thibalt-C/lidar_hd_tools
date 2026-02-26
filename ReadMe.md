@@ -15,7 +15,7 @@ As IGN (Institut national de l’information géographique et forestière, Franc
 
 ## About LiDAR HD programme
 
-LiDAR HD programme is one of the main projects currently managed by IGN, with numerous implications for public action in territories, as well as research works at local or regional scale. All the French territory (except French Guyana) is expected to be covered by the end of 2026 — current coverage is provided [here](https://macarte.ign.fr/carte/mThSup/diffusionMNxLiDARHD). Digital models, namely elevation (DEM), surface (DSM) and height (DHM) are produced and delivered by IGN, as well as 3D point clouds. All of these products are grouped by 1 km$^2$ tiles, that can be downloaded using API requests or the dedicated [online platform](https://cartes.gouv.fr/telechargement/IGNF_NUAGES-DE-POINTS-LIDAR-HD). If the online platform provides tools to manually select several tools efficiently, there is for now no automated downloading of such data for geocoded polygons.
+LiDAR HD programme is one of the main projects currently managed by IGN, with numerous implications for public action in territories, as well as research works at local or regional scale. All the French territory (except French Guyana) is expected to be covered by the end of 2026 — current coverage is provided [here](https://macarte.ign.fr/carte/mThSup/diffusionMNxLiDARHD). Digital models, namely elevation (DEM), surface (DSM) and height (DHM) are produced and delivered by IGN, as well as 3D point clouds. All of these products are grouped by 1 km² tiles, that can be downloaded using API requests or the dedicated [online platform](https://cartes.gouv.fr/telechargement/IGNF_NUAGES-DE-POINTS-LIDAR-HD). If the online platform provides tools to manually select several tools efficiently, there is for now no automated downloading of such data for geocoded polygons.
 
 ## Requirements
 
@@ -77,4 +77,81 @@ lhd.current_folders()
 
 This will show the folders associated to each type of data.
 
-### 
+### Workflow starting from a `geopandas.GeoDataFrame` object
+
+As many geographic data can be converted into `geopandas.GeoDataFrame` class objects, `lidar_hd_tools` has been optimised to work with this kind of object.
+
+The only requirement is to have a **known coordinate reference system (CRS)**. This will allow projection into other CRS when necessary. As the conversion is done by module’s functions, there is no sensitivity to the initial CRS of the provided `geopandas.GeoDataFrame`.
+
+You might use the following to launch the workflow:
+
+```
+dataset = routine_from_gdf(gdf,
+                           decimation_factor=2,
+                           lidar_decimation_factor=10,
+                           build_dataset=True,
+                           original_resolution=0.5,
+                           data_for_derivation="DSM",
+                           threshold_for_warning=10
+                           )
+```
+
+Below is a description of such function and its parameters. You should not change the `original_resolution` parameter as it should be 0.5 meters for LiDAR HD. Decimation factors make more efficient the loading of data as python objects, but are not affecting the size of the stored files (that are full-sized data). Derived data computed when `build_dataset` is `True` are: sky viewing factor (SVF), slope aspect, slope gradient and hill shade. The `data_for_derivation` parameter is to change depending on the context: sometimes it is meaningful to use the DSM and other times the DEM. DHM is also derived by subtracting DSM with DEM, as well as vegetation and buildings cover by counting the number of classified points of LiDAR data per pixel.
+
+#### `lhd.routine_from_gdf(gdf)` 
+
+##### Parameters (Inputs)
+
+| Parameter | Type | Description | Default Value |
+|--|--|--|--| 
+| `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the geospatial data to process.                                         | **Required**    |
+| `decimation_factor`        | `int`                         | Decimation factor for raster data (e.g., 2 = 1 point every 2).                                  | `2`             |
+| `lidar_decimation_factor`  | `int`                         | Decimation factor for LiDAR data.                                                              | `10`            |
+| `build_dataset`            | `bool`                        | If `True`, allows the derivation of the downloaded data into other products (DHM, SVF, slope aspect, slope gradient, hill shade, vegetation, buildings).                    | `True`          |
+| `original_resolution`      | `float`                       | Original spatial resolution of the data (in meters).                                            | `0.5`           |
+| `data_for_derivation`      | `str`                         | Type of data (`"DSM"` or `"DEM"`) to use for derivation of some features, relevant when dataset is built.                                        | `"DSM"`         |
+| `threshold_for_warning`    | `float`                       | Threshold of 1 km² tiles beyond which a warning is issued because of size of the data to download.                         | `10`            |
+
+##### Returns (Outputs)
+
+if `build_dataset`  is `True`:
+
+| Parameter | Type | Description |
+|--|--|--|
+| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata. |
+
+if `build_dataset`  is `False`:
+
+| Parameter | Type | Description |
+|--|--|--|
+| `sets`                      | list of 2 `numpy.ndarray` | DSM and DEM with coordinates (3D position), tiles are concatenated |
+| `clouds`                      | list of `laspy.LasData`   | 3D point clouds of LiDAR data, as many as there are extracted tiles. |
+
+### Workflow starting from coordinates
+
+If you want to extract information around a given point (of coordinates `lon` and `lat` in EPSG:4326), you can use the following to create a geocoded rectangle (here of 200 by 200 meters) around your point as a `geopandas.GeoDataFrame` class object:
+
+```
+gdf = lhd.geodataframe_from_coordinates(lat, lon, size=200)
+```
+
+Then you can use the workflow described above.
+
+#### `lhd.geodataframe_from_coordinates(lat,lon)`
+
+##### Parameters (Inputs)
+
+| Parameter | Type | Description | Default Value |
+|--|--|--|--| 
+| `lat`                      | `float`      | Latitude in EPSG:4326 (WGS84).                                         | **Required**    |
+| `lon`                      | `float`      | Longitude in EPSG:4326 (WGS84).                                         | **Required**    |
+| `size`                      | `float`/`int`      | Size of the created rectangle, in meters.                                         | 200    |
+
+##### Returns (Outputs)
+
+| Parameter | Type | Description |
+|--|--|--|
+| `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the rectangle around the given coordinates, of given size. |
+
+
+### Further processing (water and building masks)
