@@ -11,12 +11,12 @@
 - [About LiDAR HD programme](#about-lidar-hd-programme)
 - [Requirements](#requirements)
 - [Getting started](#getting-started)
-	  - [Importing the library](#importing-the-library)
-	  - [Default folders](#default-folders)
-	  - [Workflow starting from a `geopandas.GeoDataFrame` object](#workflow-starting-from-a-geopandasgeodataframe-object)
-	  - [Workflow starting from coordinates](#workflow-starting-from-coordinates)
-	  - [Further processing (water and building masks)](#further-processing-water-and-building-masks)
-	  - [Saving a dataset](#saving-a-dataset)
+	- [Importing the library](#importing-the-library)
+	- [Default folders](#default-folders)
+	- [Workflow starting from a `geopandas.GeoDataFrame` object](#workflow-starting-from-a-geopandasgeodataframe-object)
+	- [Workflow starting from coordinates](#workflow-starting-from-coordinates)
+	- [Further processing (water and building masks)](#further-processing-water-and-building-masks)
+	- [Saving a dataset](#saving-a-dataset)
 - [Visualisation](#visualisation)
 
 ## Module overview
