@@ -7,7 +7,17 @@
 \
 ***CC-BY 4.0 licence** (https://creativecommons.org/licenses/by/4.0/deed.fr).*
 
-{{TOC}}
+- [Module overview](#module-overview)
+- [About LiDAR HD programme](#about-lidar-hd-programme)
+- [Requirements](#requirements)
+- [Getting started](#getting-started)
+	  - [Importing the library](#importing-the-library)
+	  - [Default folders](#default-folders)
+	  - [Workflow starting from a `geopandas.GeoDataFrame` object](#workflow-starting-from-a-geopandasgeodataframe-object)
+	  - [Workflow starting from coordinates](#workflow-starting-from-coordinates)
+	  - [Further processing (water and building masks)](#further-processing-water-and-building-masks)
+	  - [Saving a dataset](#saving-a-dataset)
+- [Visualisation](#visualisation)
 
 ## Module overview
 
@@ -219,3 +229,30 @@ save_dataset(dataset, filename)
 > ##### Returns (Outputs)
 > 
 > No return.
+
+## Visualisation
+
+As datasets are `xarray.Dataset` objects, it is easy to visualise them (e.g. using `dataset.SVF.plot()`. Hence, some visualisation tools are provided if you want to have rapid results without fine-tuning yourself the figures.
+
+We assume here that we did the following import:
+
+```
+import lidar_hd_tools.visualisation as vis
+```
+
+> #### `plot_dataset(dataset,attribute)`
+> 
+> ##### Parameters (Inputs)
+> 
+> | Parameter | Type | Description | Default Value |
+> |--|--|--|--| 
+> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
+> | `attribute`                      | `str`      |  name of the attribute to plot (call `dataset` if you want to explore available attributes).                                        | **Required**    |
+> | `ax`                      | `matplotlib.axis`      | Axis if you want insert in an existing figure. If `None` figure and axis will be created.                                      | `None`   |
+> | `projection`                      | `cartopy.crs`      | Projection of the axis in terms of coordinate reference system (CRS), using `cartopy`’s logic.                                        | `lambert93`  (corresponds to `cartopy.crs.LambertConformal(**kwargs)` with `kwargs` according to EPSG:2154 CRS).    |
+>
+> ##### Returns (Outputs)
+> 
+> | Parameter | Type | Description |
+> |--|--|--|
+> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata, enriched with the building mask. |
