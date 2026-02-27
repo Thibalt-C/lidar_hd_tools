@@ -98,38 +98,34 @@ dataset = routine_from_gdf(gdf,
 
 Below is a description of such function and its parameters. You should not change the `original_resolution` parameter as it should be 0.5 meters for LiDAR HD. Decimation factors make more efficient the loading of data as python objects, but are not affecting the size of the stored files (that are full-sized data). Derived data computed when `build_dataset` is `True` are: sky viewing factor (SVF), slope aspect, slope gradient and hill shade. The `data_for_derivation` parameter is to change depending on the context: sometimes it is meaningful to use the DSM and other times the DEM. DHM is also derived by subtracting DSM with DEM, as well as vegetation and buildings cover by counting the number of classified points of LiDAR data per pixel.
 
----
-
-#### `lhd.routine_from_gdf(gdf)` 
-
-##### Parameters (Inputs)
-
-| Parameter | Type | Description | Default Value |
-|--|--|--|--| 
-| `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the geospatial data to process.                                         | **Required**    |
-| `decimation_factor`        | `int`                         | Decimation factor for raster data (e.g., 2 = 1 point every 2).                                  | `2`             |
-| `lidar_decimation_factor`  | `int`                         | Decimation factor for LiDAR data.                                                              | `10`            |
-| `build_dataset`            | `bool`                        | If `True`, allows the derivation of the downloaded data into other products (DHM, SVF, slope aspect, slope gradient, hill shade, vegetation, buildings).                    | `True`          |
-| `original_resolution`      | `float`                       | Original spatial resolution of the data (in meters).                                            | `0.5`           |
-| `data_for_derivation`      | `str`                         | Type of data (`"DSM"` or `"DEM"`) to use for derivation of some features, relevant when dataset is built.                                        | `"DSM"`         |
-| `threshold_for_warning`    | `float`                       | Threshold of 1 km² tiles beyond which a warning is issued because of size of the data to download.                         | `10`            |
-
-##### Returns (Outputs)
-
-if `build_dataset`  is `True`:
-
-| Parameter | Type | Description |
-|--|--|--|
-| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata. |
-
-if `build_dataset`  is `False`:
-
-| Parameter | Type | Description |
-|--|--|--|
-| `sets`                      | list of 2 `numpy.ndarray` | DSM and DEM with coordinates (3D position), tiles are concatenated |
-| `clouds`                      | list of `laspy.LasData`   | 3D point clouds of LiDAR data, as many as there are extracted tiles. |
-
----
+> #### `lhd.routine_from_gdf(gdf)` 
+> 
+> ##### Parameters (Inputs)
+> 
+> | Parameter | Type | Description | Default Value |
+> |--|--|--|--| 
+> | `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the geospatial data to process.                                         | **Required**    |
+> | `decimation_factor`        | `int`                         | Decimation factor for raster data (e.g., 2 = 1 point every 2).                                  | `2`             |
+> | `lidar_decimation_factor`  | `int`                         | Decimation factor for LiDAR data.                                                              | `10`            |
+> | `build_dataset`            | `bool`                        | If `True`, allows the derivation of the downloaded data into other products (DHM, SVF, slope aspect, slope gradient, hill shade, vegetation, buildings).                    | `True`          |
+> | `original_resolution`      | `float`                       | Original spatial resolution of the data (in meters).                                            | `0.5`           |
+> | `data_for_derivation`      | `str`                         | Type of data (`"DSM"` or `"DEM"`) to use for derivation of some features, relevant when dataset is built.                                        | `"DSM"`         |
+> | `threshold_for_warning`    | `float`                       | Threshold of 1 km² tiles beyond which a warning is issued because of size of the data to download.                         | `10`            |
+> 
+> ##### Returns (Outputs)
+> 
+> if `build_dataset`  is `True`:
+> 
+> | Parameter | Type | Description |
+> |--|--|--|
+> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata. |
+> 
+> if `build_dataset`  is `False`:
+> 
+> | Parameter | Type | Description |
+> |--|--|--|
+> | `sets`                      | list of 2 `numpy.ndarray` | DSM and DEM with coordinates (3D position), tiles are concatenated |
+> | `clouds`                      | list of `laspy.LasData`   | 3D point clouds of LiDAR data, as many as there are extracted tiles. |
 
 ### Workflow starting from coordinates
 
@@ -141,25 +137,21 @@ gdf = lhd.geodataframe_from_coordinates(lat, lon, size=200)
 
 Then you can use the workflow described above.
 
----
-
-#### `lhd.geodataframe_from_coordinates(lat,lon)`
-
-##### Parameters (Inputs)
-
-| Parameter | Type | Description | Default Value |
-|--|--|--|--| 
-| `lat`                      | `float`      | Latitude in EPSG:4326 (WGS84).                                         | **Required**    |
-| `lon`                      | `float`      | Longitude in EPSG:4326 (WGS84).                                         | **Required**    |
-| `size`                      | `float`/`int`      | Size of the created rectangle, in meters.                                         | 200    |
-
-##### Returns (Outputs)
-
-| Parameter | Type | Description |
-|--|--|--|
-| `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the rectangle around the given coordinates, of given size. |
-
----
+> #### `lhd.geodataframe_from_coordinates(lat,lon)`
+> 
+> ##### Parameters (Inputs)
+> 
+> | Parameter | Type | Description | Default Value |
+> |--|--|--|--| 
+> | `lat`                      | `float`      | Latitude in EPSG:4326 (WGS84).                                         | **Required**    |
+> | `lon`                      | `float`      | Longitude in EPSG:4326 (WGS84).                                         | **Required**    |
+> | `size`                      | `float`/`int`      | Size of the created rectangle, in meters.                                         | 200    |
+> 
+> ##### Returns (Outputs)
+> 
+> | Parameter | Type | Description |
+> |--|--|--|
+> | `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the rectangle around the given coordinates, of given size. |
 
 
 ### Further processing (water and building masks)
@@ -172,23 +164,19 @@ To enrich the previously obtained `dataset` with a water mask, you may use the f
 dataset = lhd.get_water_mask(dataset)
 ```
 
----
-
-#### `get_water_mask(dataset)`
-
-##### Parameters (Inputs)
-
-| Parameter | Type | Description | Default Value |
-|--|--|--|--| 
-| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
-
-##### Returns (Outputs)
-
-| Parameter | Type | Description |
-|--|--|--|
-| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata, enriched with the water mask. |
-
----
+> #### `get_water_mask(dataset)`
+> 
+> ##### Parameters (Inputs)
+> 
+> | Parameter | Type | Description | Default Value |
+> |--|--|--|--| 
+> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
+> 
+> ##### Returns (Outputs)
+> 
+> | Parameter | Type | Description |
+> |--|--|--|
+> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata, enriched with the water mask. |
 
 Similarly, enriching a `dataset` with a building mask can be done using:
 
@@ -196,23 +184,20 @@ Similarly, enriching a `dataset` with a building mask can be done using:
 dataset = lhd.get_buildings_mask(dataset)
 ```
 
----
 
-#### `get_buildings_mask(dataset)`
-
-##### Parameters (Inputs)
-
-| Parameter | Type | Description | Default Value |
-|--|--|--|--| 
-| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
-
-##### Returns (Outputs)
-
-| Parameter | Type | Description |
-|--|--|--|
-| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata, enriched with the building mask. |
-
----
+> #### `get_buildings_mask(dataset)`
+> 
+> ##### Parameters (Inputs)
+> 
+> | Parameter | Type | Description | Default Value |
+> |--|--|--|--| 
+> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
+> 
+> ##### Returns (Outputs)
+> 
+> | Parameter | Type | Description |
+> |--|--|--|
+> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata, enriched with the building mask. |
 
 ### Saving a dataset
 
@@ -222,19 +207,15 @@ The datasets are `xarray.Dataset` class objects. But some of their features prev
 save_dataset(dataset, filename)
 ```
 
----
-
-#### `save_dataset(dataset, filename)`
-
-##### Parameters (Inputs)
-
-| Parameter | Type | Description | Default Value |
-|--|--|--|--| 
-| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
-| `filename`                      | `str`      | Name of he file/path for local saving.                                         | **Required**    |
-
-##### Returns (Outputs)
-
-No return.
-
----
+> #### `save_dataset(dataset, filename)`
+> 
+> ##### Parameters (Inputs)
+> 
+> | Parameter | Type | Description | Default Value |
+> |--|--|--|--| 
+> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
+> | `filename`                      | `str`      | Name of he file/path for local saving.                                         | **Required**    |
+> 
+> ##### Returns (Outputs)
+> 
+> No return.
