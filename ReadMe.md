@@ -75,7 +75,7 @@ You can check the configured folders by typing on a python script / Jupyter note
 lhd.current_folders()
 ```
 
-This will show the folders associated to each type of data.
+This will show the folders associated to each type of data. Note that you cannot have more than two levels of depths for the folders (e.g. for DSM you use the path `tiles/tiles_DSM/`).
 
 ### Workflow starting from a `geopandas.GeoDataFrame` object
 
@@ -97,6 +97,8 @@ dataset = routine_from_gdf(gdf,
 ```
 
 Below is a description of such function and its parameters. You should not change the `original_resolution` parameter as it should be 0.5 meters for LiDAR HD. Decimation factors make more efficient the loading of data as python objects, but are not affecting the size of the stored files (that are full-sized data). Derived data computed when `build_dataset` is `True` are: sky viewing factor (SVF), slope aspect, slope gradient and hill shade. The `data_for_derivation` parameter is to change depending on the context: sometimes it is meaningful to use the DSM and other times the DEM. DHM is also derived by subtracting DSM with DEM, as well as vegetation and buildings cover by counting the number of classified points of LiDAR data per pixel.
+
+---
 
 #### `lhd.routine_from_gdf(gdf)` 
 
@@ -127,6 +129,8 @@ if `build_dataset`  is `False`:
 | `sets`                      | list of 2 `numpy.ndarray` | DSM and DEM with coordinates (3D position), tiles are concatenated |
 | `clouds`                      | list of `laspy.LasData`   | 3D point clouds of LiDAR data, as many as there are extracted tiles. |
 
+---
+
 ### Workflow starting from coordinates
 
 If you want to extract information around a given point (of coordinates `lon` and `lat` in EPSG:4326), you can use the following to create a geocoded rectangle (here of 200 by 200 meters) around your point as a `geopandas.GeoDataFrame` class object:
@@ -136,6 +140,8 @@ gdf = lhd.geodataframe_from_coordinates(lat, lon, size=200)
 ```
 
 Then you can use the workflow described above.
+
+---
 
 #### `lhd.geodataframe_from_coordinates(lat,lon)`
 
@@ -153,5 +159,82 @@ Then you can use the workflow described above.
 |--|--|--|
 | `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the rectangle around the given coordinates, of given size. |
 
+---
+
 
 ### Further processing (water and building masks)
+
+Using other data from IGN (BDTOPO data), `lidar_hd_tools` offers the possibility to add some binary masks for buildings or water. Building mask will be more consistent than the building coverage as it relies on geocoded polygons — and so does the water mask. This processing requires to have built a dataset (`xarray.Dataset` class object).
+
+To enrich the previously obtained `dataset` with a water mask, you may use the following:
+
+```
+dataset = lhd.get_water_mask(dataset)
+```
+
+---
+
+#### `get_water_mask(dataset)`
+
+##### Parameters (Inputs)
+
+| Parameter | Type | Description | Default Value |
+|--|--|--|--| 
+| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
+
+##### Returns (Outputs)
+
+| Parameter | Type | Description |
+|--|--|--|
+| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata, enriched with the water mask. |
+
+---
+
+Similarly, enriching a `dataset` with a building mask can be done using:
+
+```
+dataset = lhd.get_buildings_mask(dataset)
+```
+
+---
+
+#### `get_buildings_mask(dataset)`
+
+##### Parameters (Inputs)
+
+| Parameter | Type | Description | Default Value |
+|--|--|--|--| 
+| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
+
+##### Returns (Outputs)
+
+| Parameter | Type | Description |
+|--|--|--|
+| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata, enriched with the building mask. |
+
+---
+
+### Saving a dataset
+
+The datasets are `xarray.Dataset` class objects. But some of their features prevent them from a normal save using `xarray` tools. Thus, the following command can be used to save a dataset with `.nc` format:
+
+```
+save_dataset(dataset, filename)
+```
+
+---
+
+#### `save_dataset(dataset, filename)`
+
+##### Parameters (Inputs)
+
+| Parameter | Type | Description | Default Value |
+|--|--|--|--| 
+| `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
+| `filename`                      | `str`      | Name of he file/path for local saving.                                         | **Required**    |
+
+##### Returns (Outputs)
+
+No return.
+
+---

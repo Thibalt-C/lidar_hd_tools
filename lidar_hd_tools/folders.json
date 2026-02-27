@@ -1,5 +1,5 @@
 {
-  "DEM": "tiles/",
-  "DSM": "tiles/",
-  "lidar": "lidar_tiles/"
+  "DEM": "tiles/DEM/",
+  "DSM": "tiles/DSM/",
+  "lidar": "tiles/lidar/"
 }

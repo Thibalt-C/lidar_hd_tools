@@ -752,7 +752,7 @@ def get_buildings(dataset, gdf_to_clip=None):
 
 
 
-def get_water_coverage(dataset):
+def get_water_mask(dataset):
 
     bounds = [dataset.lon.min().values, dataset.lat.min().values,
               dataset.lon.max().values, dataset.lat.max().values]
@@ -775,7 +775,7 @@ def get_water_coverage(dataset):
     is_water[is_water==False] = np.nan
     is_water[is_bridge==True] = np.nan
 
-    dataset["water"] = xr.DataArray(is_water,
+    dataset["water_mask"] = xr.DataArray(is_water,
                                     dims=('y', 'x'),
                                     attrs={"standard_name": "Water pixels",
                                            "units": "no units",
@@ -789,8 +789,8 @@ def get_water_coverage(dataset):
 
 
 
-def get_buildings_coverage(dataset, gdf_to_clip=None):
-    gdf = get_buildings(dataset, gdf_to_clip)
+def get_buildings_mask(dataset):
+    gdf = get_buildings(dataset, gdf_to_clip=None)
     x, y = np.meshgrid(dataset.x.values, dataset.y.values)
     points = np.stack([x[dataset.mask == 1], y[dataset.mask == 1]], axis=-1)
 
@@ -798,7 +798,7 @@ def get_buildings_coverage(dataset, gdf_to_clip=None):
     is_building[dataset.mask == 1] = gdf.union_all().intersects([Point(point) for point in points])
     is_building[is_building == False] = np.nan
 
-    dataset["buildings"] = xr.DataArray(is_building,
+    dataset["buildings_mask"] = xr.DataArray(is_building,
                                         dims=('y', 'x'),
                                         attrs={"standard_name": "Building pixels",
                                                "units": "no units",
