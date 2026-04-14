@@ -1,8 +1,8 @@
 # `lidar_hd_tools`: for a quick and efficient loading of IGN’s LiDAR HD data
 
 **Module’s name**: `lidar_hd_tools` \
-**Release**: 0.01 \
-**Date**: March 2026 \
+**Release**: 0.1 \
+**Date**: April 2026 \
 **Author**: Thibault CHARDON (IPGP, Université Paris Cité) \
 \
 ***CC-BY 4.0 licence** (https://creativecommons.org/licenses/by/4.0/deed.fr).*
@@ -15,8 +15,9 @@
 	- [Default folders](#default-folders)
 	- [Workflow starting from a `geopandas.GeoDataFrame` object](#workflow-starting-from-a-geopandasgeodataframe-object)
 	- [Workflow starting from coordinates](#workflow-starting-from-coordinates)
-	- [Further processing (water and building masks)](#further-processing-water-and-building-masks)
-	- [Saving a dataset](#saving-a-dataset)
+	- [BD-TOPO implementations](#bd-topo-implementations)
+	- [OCS-GE implementations](#ocs-ge-implementations)
+	- [BD-ORTHO implementations](#bd-ortho-implementations)
 - [Visualisation](#visualisation)
 
 ## Module overview
@@ -44,11 +45,23 @@ conda activate lidar_hd_env
 Then we install the required libraries available on channel `conda-forge`:
 
 ```
-conda install -c conda-forge numpy pandas xarray \
-							 matplotlib cartopy cmcrameri \
-							 geopandas shapely pyproj \
-							 laspy pillow \
-							 owslib requests
+conda install -c conda-forge cartopy \
+			     cmcrameri \
+			     geopandas \
+			     laspy \
+			     matplotlib \
+			     numpy \
+			     owslib \
+			     pandas \
+			     pvlib-python \
+			     rasterio \
+			     requests \
+			     rioxarray \
+			     scipy \
+			     shapely \
+			     tqdm \
+			     xarray \
+			     pip -y
 ```
 
 and one extra library for relief visualisation, based on [Zakšek et al. (2011)](https://www.mdpi.com/2072-4292/3/2/398) & [Kokalj (2025)](https://doi.org/10.1002/arp.70002):
@@ -77,7 +90,7 @@ import lidar_hd_tools as lhd
 
 ### Default folders
 
-When imported, `lidar_hd_tools` will look for folders where to store imported data. If not existing it will try to create them. The name and path of those folder can be set on the `folders.json` file, which can be found inside the `lidar_hd_tools/` library folder. If this process fails, the module can be imported anyway but there is a risk of further error while saving downloaded data in your computer. 
+When imported, `lidar_hd_tools` will look for folders where to store imported data. The name and path of those folder can be set on the `folders.json` file, which can be found inside the `lidar_hd_tools/` library folder.
 
 You can check the configured folders by typing on a python script / Jupyter notebook:
 
@@ -85,7 +98,7 @@ You can check the configured folders by typing on a python script / Jupyter note
 lhd.current_folders()
 ```
 
-This will show the folders associated to each type of data. Note that you cannot have more than two levels of depths for the folders (e.g. for DSM you use the path `tiles/tiles_DSM/`).
+This will show the folders associated to each type of data.
 
 ### Workflow starting from a `geopandas.GeoDataFrame` object
 
@@ -96,31 +109,36 @@ The only requirement is to have a **known coordinate reference system (CRS)**. T
 You might use the following to launch the workflow:
 
 ```
-dataset = routine_from_gdf(gdf,
-                           decimation_factor=2,
-                           lidar_decimation_factor=10,
-                           build_dataset=True,
-                           original_resolution=0.5,
-                           data_for_derivation="DSM",
-                           threshold_for_warning=10
-                           )
+dataset = download_data(gdf,
+                  	decimation_factor = 10,
+                  	lidar_decimation_factor = 10,
+                  	build_dataset=True,
+                  	data_for_derivation="DSM",
+                  	threshold_for_warning=10,
+                  	verbose=True
+                  	):
 ```
 
-Below is a description of such function and its parameters. You should not change the `original_resolution` parameter as it should be 0.5 meters for LiDAR HD. Decimation factors make more efficient the loading of data as python objects, but are not affecting the size of the stored files (that are full-sized data). Derived data computed when `build_dataset` is `True` are: sky viewing factor (SVF), slope aspect, slope gradient and hill shade. The `data_for_derivation` parameter is to change depending on the context: sometimes it is meaningful to use the DSM and other times the DEM. DHM is also derived by subtracting DSM with DEM, as well as vegetation and buildings cover by counting the number of classified points of LiDAR data per pixel.
+Below is a description of such function and its parameters. Decimation factors make more efficient the loading and computation of data as python objects, but are not affecting the size of the stored files (that are full-sized data). Derived data computed when `build_dataset` is `True` are: sky viewing factor (SVF), slope aspect, slope gradient and shadow — shadow is computed for 9 by 16 different sun positions, for now there is no handy parameter to change this amount. The `data_for_derivation` parameter is to change depending on the context: sometimes it is meaningful to use the DSM (e.g. urban studies) and other times the DEM (e.g. landslide monitoring). DHM is also derived by subtracting DSM with DEM, as well as vegetation cover by counting the number of classified points of LiDAR data per pixel.
 
-> #### `lhd.routine_from_gdf(gdf)` 
+Unbuilt mode (`not build_dataset`) can be used if you are more interested by the point cloud itself, as it outputs both the unbuilt dataset (containing only DSM and DEM) and the list of point clouds associated to the same area of interest.
+
+Built and unbuilt dataset are both `xarray.Dataset` objects, with a `rio` accessor from `rioxarray` (see [here](https://corteva.github.io/rioxarray/html/getting_started/getting_started.html) for detail). This allows them to be reprojected easily, using `xarray.Dataset.rio.reproject`.
+
+> #### `lhd.download_data(gdf)` 
 > 
 > ##### Parameters (Inputs)
 > 
-> | Parameter | Type | Description | Default Value |
-> |--|--|--|--| 
-> | `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the geospatial data to process.                                         | **Required**    |
-> | `decimation_factor`        | `int`                         | Decimation factor for raster data (e.g., 2 = 1 point every 2).                                  | `2`             |
-> | `lidar_decimation_factor`  | `int`                         | Decimation factor for LiDAR data.                                                              | `10`            |
-> | `build_dataset`            | `bool`                        | If `True`, allows the derivation of the downloaded data into other products (DHM, SVF, slope aspect, slope gradient, hill shade, vegetation, buildings).                    | `True`          |
-> | `original_resolution`      | `float`                       | Original spatial resolution of the data (in meters).                                            | `0.5`           |
-> | `data_for_derivation`      | `str`                         | Type of data (`"DSM"` or `"DEM"`) to use for derivation of some features, relevant when dataset is built.                                        | `"DSM"`         |
-> | `threshold_for_warning`    | `float`                       | Threshold of 1 km² tiles beyond which a warning is issued because of size of the data to download.                         | `10`            |
+> | Parameter | Type | Description                                                                                                                                          | Default Value |
+> |--|--|------------------------------------------------------------------------------------------------------------------------------------------------------|--| 
+> | `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the geospatial data to process.                                                                                              | **Required**    |
+> | `decimation_factor`        | `int`                         | Decimation factor for raster data (e.g., 2 = 1 point every 2).                                                                                       | `2`             |
+> | `lidar_decimation_factor`  | `int`                         | Decimation factor for LiDAR data.                                                                                                                    | `10`            |
+> | `build_dataset`            | `bool`                        | If `True`, allows the derivation of the downloaded data into other products (DHM, SVF, slope aspect, slope gradient, shadow, vegetation, buildings). | `True`          |
+> | `data_for_derivation`      | `str`                         | Type of data (`"DSM"` or `"DEM"`) to use for derivation of some features, relevant when dataset is built.                                            | `"DSM"`         |
+> | `threshold_for_warning`    | `float`                       | Threshold of tiles beyond which a warning is issued because of size of the data to download. To systematically turn off the warning, can be set to `numpy.inf`.                                                 | `10`            |
+> | `verbose`    | `bool`                       | Activates/deactivates the print of the advancement. Will not deactivate the warning issued by `threshold_for_warning`.                                                | `True`            |
+
 > 
 > ##### Returns (Outputs)
 > 
@@ -132,10 +150,10 @@ Below is a description of such function and its parameters. You should not chang
 > 
 > if `build_dataset`  is `False`:
 > 
-> | Parameter | Type | Description |
-> |--|--|--|
-> | `sets`                      | list of 2 `numpy.ndarray` | DSM and DEM with coordinates (3D position), tiles are concatenated |
-> | `clouds`                      | list of `laspy.LasData`   | 3D point clouds of LiDAR data, as many as there are extracted tiles. |
+> | Parameter         | Type | Description                                                         |
+> |-------------------|--|---------------------------------------------------------------------|
+> | `unbuilt_dataset` | `xarray.Dataset` | Dataset containing DSM and DEM                                      |
+> | `clouds`          | list of `laspy.LasData`   | 3D point clouds of LiDAR data, as many as there are extracted tiles. |
 
 ### Workflow starting from coordinates
 
@@ -164,15 +182,19 @@ Then you can use the workflow described above.
 > | `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the rectangle around the given coordinates, of given size. |
 
 
-### Further processing (water and building masks)
+### BD-TOPO implementations
 
-Using other data from IGN (BDTOPO data), `lidar_hd_tools` offers the possibility to add some binary masks for buildings or water. Building mask will be more consistent than the building coverage as it relies on geocoded polygons — and so does the water mask. This processing requires to have built a dataset (`xarray.Dataset` class object).
+Using BD-TOPO data from IGN, `lidar_hd_tools` offers the possibility to add some two extra-layers to your built/unbuilt dataset.
 
 To enrich the previously obtained `dataset` with a water mask, you may use the following:
 
 ```
 dataset = lhd.get_water_mask(dataset)
 ```
+
+Water mask uses the BD-TOPO vectorised inventory of rivers, basins and reservoirs, mapped at a high spatial resolution. Bridges are also recovered to not count the overlapping area as water, although it is observed that not all the bridges are on the database.
+
+Note that this is one of the two methods existing to get a water mask. Using it on a given `dataset ` will overwrite the water mask obtained using the other method, if it has been computed (see OCS-GE implementations).
 
 > #### `get_water_mask(dataset)`
 > 
@@ -202,6 +224,7 @@ dataset = lhd.get_buildings_mask(dataset)
 > | Parameter | Type | Description | Default Value |
 > |--|--|--|--| 
 > | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
+> | `verbose`                      | `bool`      | Activates/deactivates the print of the advancement.                                         | `True`    |
 > 
 > ##### Returns (Outputs)
 > 
@@ -209,32 +232,21 @@ dataset = lhd.get_buildings_mask(dataset)
 > |--|--|--|
 > | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata, enriched with the building mask. |
 
-### Saving a dataset
 
-The datasets are `xarray.Dataset` class objects. But some of their features prevent them from a normal save using `xarray` tools. Thus, the following command can be used to save a dataset with `.nc` format:
+### OCS-GE implementations
 
-```
-save_dataset(dataset, filename)
-```
+*More to come... The functions can be tested but documentation and more solid version of the code are not here yet.*
 
-> #### `save_dataset(dataset, filename)`
-> 
-> ##### Parameters (Inputs)
-> 
-> | Parameter | Type | Description | Default Value |
-> |--|--|--|--| 
-> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
-> | `filename`                      | `str`      | Name of he file/path for local saving.                                         | **Required**    |
-> 
-> ##### Returns (Outputs)
-> 
-> No return.
+
+### BD-ORTHO implementations
+
+*More to come... The functions can be tested but documentation and more solid version of the code are not here yet.*
 
 ## Visualisation
 
 As datasets are `xarray.Dataset` objects, it is easy to visualise them (e.g. using `dataset.SVF.plot()`. Hence, some visualisation tools are provided if you want to have rapid results without fine-tuning yourself the figures.
 
-We assume here that we did the following import:
+The following sub-library can be used for visualisation:
 
 ```
 import lidar_hd_tools.visualisation as vis
@@ -248,11 +260,12 @@ import lidar_hd_tools.visualisation as vis
 > |--|--|--|--| 
 > | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
 > | `attribute`                      | `str`      |  name of the attribute to plot (call `dataset` if you want to explore available attributes).                                        | **Required**    |
-> | `ax`                      | `matplotlib.axis`      | Axis if you want insert in an existing figure. If `None` figure and axis will be created.                                      | `None`   |
-> | `projection`                      | `cartopy.crs`      | Projection of the axis in terms of coordinate reference system (CRS), using `cartopy`’s logic.                                        | `lambert93`  (corresponds to `cartopy.crs.LambertConformal(**kwargs)` with `kwargs` according to EPSG:2154 CRS).    |
+> | `ax`                      | `cartopy.mpl.geoaxes.GeoAxes`      | Axis if you want insert in an existing figure. If `None` figure and axis will be created. Axis must be a geoaxis (can be initialised with `matplotlib.pyplot.subplots` using argument `subplot_kw={"projection": cartopy.crs.CRS}` using the appropriate coordinate system)                                     | `None`   |
+> | `plot_kwargs`                      | `dict`      | List of kwargs used for plotting the layer (assuming a `matplotlib.pyplot.pcolormesh` plotting method). When not `None`, replaces the `plot_kwargs` argument of the `dataset` input if it exists.                                      | `None`   |
+> | `gridlines`                      | `dict`      | If `False`, will deactivate the grid lines, that represent the geographic coordinates.                                       | `True`   |
 >
 > ##### Returns (Outputs)
 > 
 > | Parameter | Type | Description |
 > |--|--|--|
-> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata, enriched with the building mask. |
+> | `ax`                      | `cartopy.mpl.geoaxes.GeoAxes`      | Axis associated to the figure. |
