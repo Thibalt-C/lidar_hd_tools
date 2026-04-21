@@ -1,5 +1,7 @@
 # `lidar_hd_tools`: for a quick and efficient loading of IGN’s LiDAR HD data
 
+![ ](example_figures/fig1.png)
+
 **Module’s name**: `lidar_hd_tools` \
 **Release**: 0.1 \
 **Date**: April 2026 \
@@ -24,9 +26,12 @@
 
 As IGN (Institut national de l’information géographique et forestière, France) is progressively covering French territory with high density LiDAR data (LiDAR HD), the parsing of this data using the currently provided API is not well efficient yet. The `lidar_hd_tools`  python package aims to provide an easy-to-use framework for loading LiDAR HD data, with very few mandatory parameters to provide while keeping the possibility to personalise the query to fit various uses, from urban morphology to research in mountainous context.
 
+![ ](example_figures/fig2.png)
+
+
 ## About LiDAR HD programme
 
-LiDAR HD programme is one of the main projects currently managed by IGN, with numerous implications for public action in territories, as well as research works at local or regional scale. All the French territory (except French Guyana) is expected to be covered by the end of 2026 — current coverage is provided [here](https://macarte.ign.fr/carte/mThSup/diffusionMNxLiDARHD). Digital models, namely elevation (DEM), surface (DSM) and height (DHM) are produced and delivered by IGN, as well as 3D point clouds. All of these products are grouped by 1 km² tiles, that can be downloaded using API requests or the dedicated [online platform](https://cartes.gouv.fr/telechargement/IGNF_NUAGES-DE-POINTS-LIDAR-HD). If the online platform provides tools to manually select several tools efficiently, there is for now no automated downloading of such data for geocoded polygons.
+LiDAR HD programme is one of the main projects currently managed by IGN, with numerous implications for public action in territories, as well as research works at local or regional scale. All the French territory (except French Guyana) is expected to be covered by the end of 2026 — current coverage is provided [here](https://macarte.ign.fr/carte/mThSup/diffusionMNxLiDARHD). Digital models, namely elevation (DEM), surface (DSM) and height (DHM) are produced and delivered by IGN, as well as 3D point clouds. All of these products are grouped by 4 km² tiles, that can be downloaded using API requests or the dedicated [online platform](https://cartes.gouv.fr/telechargement/IGNF_NUAGES-DE-POINTS-LIDAR-HD). If the online platform provides tools to manually select several tools efficiently, there is for now no automated downloading of such data for geocoded polygons.
 
 ## Requirements
 
@@ -252,7 +257,7 @@ The following sub-library can be used for visualisation:
 import lidar_hd_tools.visualisation as vis
 ```
 
-> #### `plot_dataset(dataset,attribute)`
+> #### `vis.plot_dataset(dataset,attribute)`
 > 
 > ##### Parameters (Inputs)
 > 
@@ -261,8 +266,25 @@ import lidar_hd_tools.visualisation as vis
 > | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata.                                         | **Required**    |
 > | `attribute`                      | `str`      |  name of the attribute to plot (call `dataset` if you want to explore available attributes).                                        | **Required**    |
 > | `ax`                      | `cartopy.mpl.geoaxes.GeoAxes`      | Axis if you want insert in an existing figure. If `None` figure and axis will be created. Axis must be a geoaxis (can be initialised with `matplotlib.pyplot.subplots` using argument `subplot_kw={"projection": cartopy.crs.CRS}` using the appropriate coordinate system)                                     | `None`   |
-> | `plot_kwargs`                      | `dict`      | List of kwargs used for plotting the layer (assuming a `matplotlib.pyplot.pcolormesh` plotting method). When not `None`, replaces the `plot_kwargs` argument of the `dataset` input if it exists.                                      | `None`   |
-> | `gridlines`                      | `dict`      | If `False`, will deactivate the grid lines, that represent the geographic coordinates.                                       | `True`   |
+> | `gridlines`                      | `bool`      | If `False`, will deactivate the grid lines, that represent the geographic coordinates.                                       | `True`   |
+> | ***kwargs*                   |       | *Additional keyword arguments for Matplotlib.*                                       |    |
+>
+> ##### Returns (Outputs)
+> 
+> | Parameter | Type | Description |
+> |--|--|--|
+> | `ax`                      | `cartopy.mpl.geoaxes.GeoAxes`      | Axis associated to the figure. |
+> | `quadmesh`                      | `cartopy.mpl.geocollection.GeoQuadMesh`      | Quadmesh of the figure. |
+
+
+> #### `vis.plot_orthophoto(dataset)`
+> 
+> ##### Parameters (Inputs)
+> 
+> | Parameter | Type | Description | Default Value |
+> |--|--|--|--| 
+> | `dataset`                      | `xarray.Dataset`      | Dataset containing spatialised information and metadata. Must contain the `orthophoto` layer.                                         | **Required**    |
+> | `ax`                      | `cartopy.mpl.geoaxes.GeoAxes`      | Axis if you want insert in an existing figure. If `None` figure and axis will be created. Axis must be a geoaxis (can be initialised with `matplotlib.pyplot.subplots` using argument `subplot_kw={"projection": cartopy.crs.CRS}` using the appropriate coordinate system)                                     | `None`   |
 >
 > ##### Returns (Outputs)
 > 

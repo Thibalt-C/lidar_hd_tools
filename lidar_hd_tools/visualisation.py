@@ -1,33 +1,42 @@
+import cartopy.mpl.geoaxes
 import matplotlib.pyplot as plt
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import cartopy.crs as ccrs
 
+def get_projection(crs):
+    epsg = crs.to_epsg()
+    if epsg == 4326:
+        projection = ccrs.PlateCarree()
+    else:
+        projection = ccrs.epsg(epsg)
+    return projection
 
-lambert93 = ccrs.LambertConformal(
-    central_longitude=3,  # Méridien central pour la France
-    central_latitude=46.5,  # Latitude centrale
-    false_easting=700000,  # Décalage est (en mètres)
-    false_northing=6600000,  # Décalage nord (en mètres)
-    standard_parallels=(44, 49),  # Parallèles standards
-    globe=ccrs.Globe(semimajor_axis=6378137, semiminor_axis=6356752.314245)  # Ellipsoïde GRS80
-)
+def plot_dataset(dataset, layer, ax=None, gridlines=True, **kwargs):
 
+    if layer not in dataset.data_vars:
+        raise Exception(f"Layer {layer} not found in dataset.")
 
-def plot_dataset(dataset,attribute, ax=None, plot_kwargs=None, gridlines=True):
+    if dataset[layer].dims != ('y','x'):
+        raise Exception(f"Layer {layer} is not a spatial layer. Reduce the other dimensions first.")
 
-    projection = ccrs.epsg(dataset.rio.crs.to_epsg())
+    if dataset.rio.crs is None:
+        raise Exception("Dataset has no CRS. Use `dataset.rio.write_crs()` to set the CRS.")
+
+    projection = get_projection(dataset.rio.crs)
 
     if ax==None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, figsize=(20, 8))
+    elif (type(ax) != cartopy.mpl.geoaxes.GeoAxesSubplot) | (type(ax) != cartopy.mpl.geoaxes.GeoAxes):
+        raise Exception("ax must be a `cartopy.mpl.geoaxes.GeoAxesSubplot` or `cartopy.mpl.geoaxes.GeoAxes`.")
 
-    if plot_kwargs==None:
-        dataset[attribute].plot(ax=ax,
-                                      **dataset[attribute].plot_kwargs
-                                      )
+    if "plot_kwargs" in dataset[layer].attrs:
+        plot_kwargs = dataset[layer].plot_kwargs.copy()
     else:
-        dataset[attribute].plot(ax=ax,
-                                **plot_kwargs
-                                )
+        plot_kwargs = {}
+
+    plot_kwargs.update(kwargs)
+
+    quadmesh = dataset[layer].plot(ax=ax, **plot_kwargs)
 
     if gridlines:
         gl = ax.gridlines(
@@ -42,12 +51,17 @@ def plot_dataset(dataset,attribute, ax=None, plot_kwargs=None, gridlines=True):
 
     ax.axis('off')
 
-    return ax
+    plt.tight_layout()
+
+    return ax, quadmesh
 
 
 def plot_orthophoto(dataset, ax=None):
 
-    projection = ccrs.epsg(dataset.rio.crs.to_epsg())
+    if "orthoimage" not in dataset.data_vars:
+        raise Exception("Dataset has no orthoimage. Use `dataset.add_orthoimage()` to add the orthoimage.")
+
+    projection = get_projection(dataset.rio.crs)
 
     if ax is None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, figsize=(20, 8))
@@ -55,5 +69,7 @@ def plot_orthophoto(dataset, ax=None):
     dataset.orthoimage.plot.imshow(ax=ax, robust=True)
 
     ax.axis('off')
+
+    plt.tight_layout()
 
     return ax

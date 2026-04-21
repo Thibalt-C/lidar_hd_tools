@@ -1,14 +1,15 @@
 import numpy as np
 import rioxarray
 import xarray as xr
-
+import geopandas as gpd
+from shapely.geometry import Polygon
 
 
 def clip_dataset(dataset, gdf):
 
-    dataset = dataset.rio.clip(gdf.geometry.values, gdf.crs)
+    dataset = dataset.rio.clip(gdf.geometry.values, gdf.crs, drop=True)
 
-    mask = np.where(np.isfinite(dataset.DEM.values), True, False)
+    mask = np.where(np.isfinite(dataset.DSM.values), True, False)
 
     if "mask" in list(dataset.keys()):
         dataset.mask.data = mask
@@ -53,4 +54,29 @@ def compress_dataset(dataset, verbose=False):
     return dataset
 
 
+def geodataframe_from_coordinates(lat, lon,  # degrees (WGS84)
+                                  size=200  # meters
+                                  ):
+    # plane approximation
+    lat_degree = size / 111320.0
+    lon_degree = size / (111320.0 * abs(np.cos(np.radians(lat))))
+
+    top = lat + lat_degree / 2
+    bottom = lat - lat_degree / 2
+    right = lon + lon_degree / 2
+    left = lon - lon_degree / 2
+
+    polygon = Polygon([
+        (left, top),
+        (right, top),
+        (right, bottom),
+        (left, bottom)
+    ])
+
+    gdf = gpd.GeoDataFrame(
+        geometry=[polygon],
+        crs="EPSG:4326"  # WGS84
+    )
+
+    return gdf
 

@@ -28,6 +28,9 @@ def get_metadata(gdf):
 
             merged_metadata.append(metadata)
 
+            if metadata.empty:
+                raise ValueError(f"No tile found. Please check the selected location and used CRS.")
+
     projection = np.unique(merged_metadata[0]["projection"])[0] # assuming only one local projection used
     dem_tiles_urls = np.unique(merged_metadata[2]['url']).tolist()
     dem_tiles_filenames = np.unique(merged_metadata[2]['name_download']).tolist()

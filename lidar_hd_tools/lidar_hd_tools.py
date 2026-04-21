@@ -2,13 +2,13 @@ from lidar_hd_tools.metadata import get_metadata
 from lidar_hd_tools.folder_manager import lidar_tiles, DSM_tiles, DEM_tiles
 from lidar_hd_tools.tiles_tools import download_tiles, dem_dsm_xarray, compute_subproducts, original_resolution
 from lidar_hd_tools.point_cloud_tools import download_lidar, get_vegetation_cover
-from lidar_hd_tools.utils import clip_dataset, compress_dataset
+from lidar_hd_tools.utils import clip_dataset, compress_dataset, geodataframe_from_coordinates
 
 
 
 
 def download_data(gdf,
-                  decimation_factor = 10,
+                  decimation_factor = 5,
                   lidar_decimation_factor = 10,
                   build_dataset=True,
                   data_for_derivation="DSM",
@@ -30,7 +30,9 @@ def download_data(gdf,
     sets = download_tiles(urls[1], urls[0], filenames[1], filenames[0],
                           decimation_factor=decimation_factor,
                           verbose=verbose)
+
     unbuilt_dataset = dem_dsm_xarray(sets, projection)
+    unbuilt_dataset = clip_dataset(unbuilt_dataset, gdf)
 
     clouds = download_lidar(urls[2], filenames[2], decimation_factor=lidar_decimation_factor, verbose=verbose)
 
