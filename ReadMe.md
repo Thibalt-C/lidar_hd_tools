@@ -3,7 +3,7 @@
 ![ ](example_figures/fig1.png)
 
 **Module’s name**: `lidar_hd_tools` \
-**Release**: 0.1 \
+**Release**: 0.1.1 \
 **Date**: April 2026 \
 **Author**: Thibault CHARDON (IPGP, Université Paris Cité) \
 \
