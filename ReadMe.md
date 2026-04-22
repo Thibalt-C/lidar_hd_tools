@@ -115,7 +115,7 @@ You might use the following to launch the workflow:
 
 ```
 dataset = download_data(gdf,
-                  	decimation_factor = 10,
+                  	decimation_factor = 5,
                   	lidar_decimation_factor = 10,
                   	build_dataset=True,
                   	data_for_derivation="DSM",
@@ -130,19 +130,21 @@ Unbuilt mode (`not build_dataset`) can be used if you are more interested by the
 
 Built and unbuilt dataset are both `xarray.Dataset` objects, with a `rio` accessor from `rioxarray` (see [here](https://corteva.github.io/rioxarray/html/getting_started/getting_started.html) for detail). This allows them to be reprojected easily, using `xarray.Dataset.rio.reproject`.
 
-> #### `lhd.download_data(gdf)` 
+> #### `lhd.download_data(gdf)`
+> 
+> [**[source]**](lidar_hd_tools/lidar_hd_tools.py#L10)
 > 
 > ##### Parameters (Inputs)
 > 
 > | Parameter | Type | Description                                                                                                                                          | Default Value |
-> |--|--|------------------------------------------------------------------------------------------------------------------------------------------------------|--| 
-> | `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the geospatial data to process.                                                                                              | **Required**    |
-> | `decimation_factor`        | `int`                         | Decimation factor for raster data (e.g., 2 = 1 point every 2).                                                                                       | `2`             |
-> | `lidar_decimation_factor`  | `int`                         | Decimation factor for LiDAR data.                                                                                                                    | `10`            |
-> | `build_dataset`            | `bool`                        | If `True`, allows the derivation of the downloaded data into other products (DHM, SVF, slope aspect, slope gradient, shadow, vegetation, buildings). | `True`          |
-> | `data_for_derivation`      | `str`                         | Type of data (`"DSM"` or `"DEM"`) to use for derivation of some features, relevant when dataset is built.                                            | `"DSM"`         |
-> | `threshold_for_warning`    | `float`                       | Threshold of tiles beyond which a warning is issued because of size of the data to download. To systematically turn off the warning, can be set to `numpy.inf`.                                                 | `10`            |
-> | `verbose`    | `bool`                       | Activates/deactivates the print of the advancement. Will not deactivate the warning issued by `threshold_for_warning`.                                                | `True`            |
+> |--|--|------------------------------------------------------------------------------------------------------------------------------------------------------|---------------| 
+> | `gdf`                      | `geopandas.GeoDataFrame`      | GeoDataFrame containing the geospatial data to process.                                                                                              | **Required**  |
+> | `decimation_factor`        | `int`                         | Decimation factor for raster data (e.g., 2 = 1 point every 2).                                                                                       | `5`           |
+> | `lidar_decimation_factor`  | `int`                         | Decimation factor for LiDAR data.                                                                                                                    | `10`          |
+> | `build_dataset`            | `bool`                        | If `True`, allows the derivation of the downloaded data into other products (DHM, SVF, slope aspect, slope gradient, shadow, vegetation, buildings). | `True`        |
+> | `data_for_derivation`      | `str`                         | Type of data (`"DSM"` or `"DEM"`) to use for derivation of some features, relevant when dataset is built.                                            | `"DSM"`       |
+> | `threshold_for_warning`    | `float`                       | Threshold of tiles beyond which a warning is issued because of size of the data to download. To systematically turn off the warning, can be set to `numpy.inf`.                                                 | `10`          |
+> | `verbose`    | `bool`                       | Activates/deactivates the print of the advancement. Will not deactivate the warning issued by `threshold_for_warning`.                                                | `True`        |
 
 > 
 > ##### Returns (Outputs)
@@ -171,6 +173,8 @@ gdf = lhd.geodataframe_from_coordinates(lat, lon, size=200)
 Then you can use the workflow described above.
 
 > #### `lhd.geodataframe_from_coordinates(lat,lon)`
+> 
+> [**[source]**](lidar_hd_tools/utils.py#L8)
 > 
 > ##### Parameters (Inputs)
 > 
@@ -203,6 +207,8 @@ Note that this is one of the two methods existing to get a water mask. Using it 
 
 > #### `get_water_mask(dataset)`
 > 
+> [**[source]**](lidar_hd_tools/bd_topo_tools.py#L161)
+> 
 > ##### Parameters (Inputs)
 > 
 > | Parameter | Type | Description | Default Value |
@@ -223,6 +229,8 @@ dataset = lhd.get_buildings_mask(dataset)
 
 
 > #### `get_buildings_mask(dataset)`
+>
+> [**[source]**](lidar_hd_tools/bd_topo_tools.py#L133)
 > 
 > ##### Parameters (Inputs)
 > 
@@ -259,6 +267,8 @@ import lidar_hd_tools.visualisation as vis
 
 > #### `vis.plot_dataset(dataset,attribute)`
 > 
+> [**[source]**](lidar_hd_tools/visualisation.py#L15)
+> 
 > ##### Parameters (Inputs)
 > 
 > | Parameter | Type | Description | Default Value |
@@ -278,6 +288,8 @@ import lidar_hd_tools.visualisation as vis
 
 
 > #### `vis.plot_orthophoto(dataset)`
+> 
+> [**[source]**](lidar_hd_tools/visualisation.py#L68)
 > 
 > ##### Parameters (Inputs)
 > 

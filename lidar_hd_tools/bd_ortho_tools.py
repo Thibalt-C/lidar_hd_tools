@@ -7,7 +7,7 @@ url = "https://data.geopf.fr/wms-r?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabili
 wms = WebMapService(url, version="1.3.0")
 layer = "HR.ORTHOIMAGERY.ORTHOPHOTOS"
 
-def get_orthoimage(dataset):
+def get_orthoimage(dataset : xr.Dataset):
 
     xmin = dataset.x[0].values
     xmax = dataset.x[-1].values

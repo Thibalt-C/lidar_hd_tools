@@ -1,5 +1,7 @@
 import json
 import warnings
+import os
+
 try:
     with open("lidar_hd_tools/folders.json", "r", encoding="utf-8") as file:
         folders = json.load(file)
@@ -19,4 +21,10 @@ DEM_tiles = folders["DEM"]
 def current_folders():
     for key in folders.keys():
         print(f"{key}: {folders[key]}")
+    return
+
+def check_folders():
+    for key in folders.keys():
+        if not os.path.exists(folders[key]):
+            raise FileNotFoundError(f"Folder {folders[key]} not found.")
     return

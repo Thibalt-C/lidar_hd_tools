@@ -13,13 +13,12 @@ from lidar_hd_tools.ocs_ge_tools import get_land_occupation
 from lidar_hd_tools.bd_ortho_tools import get_orthoimage
 import lidar_hd_tools.visualisation as visualisation
 
-version = "0.1.1"
+version = "0.1.2"
 authors = ['<CHARDON_Thibault>']
-release_date = '2026-04-21'
+release_date = '2026-04-22'
 comment = """ 
-Enahancement of visualisation functions with kwargs support.
-`geodataframe_from_coordinates` function added back.
-Dataset now clipped in `download_data` function even when `build_dataset` is set to `False`.
+Enahancement of visualisation functions.
+Exception added if the folders where to store the downloaded tiles are not found.
 """
 
 def about():

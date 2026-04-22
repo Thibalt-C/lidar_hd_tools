@@ -31,16 +31,16 @@ def get_land_occupation(dataset):
         rgb = np.stack([r, g, b],axis=-1)
 
         red = (rgb[:,:,0]>rgb[:,:,1]) & (rgb[:,:,0]>rgb[:,:,2])
-        red_mask = np.where(red, 1, 0)
+        red_mask = np.where(red, True, False)
 
         blue = (rgb[:,:,2]>rgb[:,:,0]) & (rgb[:,:,2]>rgb[:,:,1])
-        blue_mask = np.where(blue, 1, 0)
+        blue_mask = np.where(blue, True, False)
 
         green = (rgb[:,:,1]>rgb[:,:,0]) & (rgb[:,:,1]>rgb[:,:,2])
-        green_mask = np.where(green, 1, 0)
+        green_mask = np.where(green, True, False)
 
         yellow = (rgb[:,:,0]>rgb[:,:,2]) & (rgb[:,:,1]>rgb[:,:,2]) & (rgb[:,:,2]>150)
-        yellow_mask = np.where((~red)&(~green)&(~blue), 1, 0)
+        yellow_mask = np.where((~red)&(~green)&(~blue), True, False)
 
         dataset["vegetalized"] = xr.DataArray(green_mask,
                                               dims=('y', 'x'),

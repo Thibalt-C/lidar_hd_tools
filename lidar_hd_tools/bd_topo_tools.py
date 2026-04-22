@@ -103,7 +103,8 @@ def divide_into_smaller_bboxes(dataset,
 
 
 
-def get_buildings(dataset, verbose):
+def get_buildings(dataset : xr.Dataset,
+                  verbose : bool =True):
 
     bboxes_gdf = divide_into_smaller_bboxes(dataset)
 
@@ -129,7 +130,8 @@ def get_buildings(dataset, verbose):
 
 
 
-def get_buildings_mask(dataset, verbose=True):
+def get_buildings_mask(dataset : xr.Dataset,
+                       verbose : bool =True):
 
     gdf = get_buildings(dataset, verbose=verbose)
 
@@ -142,7 +144,7 @@ def get_buildings_mask(dataset, verbose=True):
     #is_building[is_building == False] = 0
 
 
-    dataset["buildings_mask"] = xr.DataArray(is_building,
+    dataset["buildings_mask"] = xr.DataArray(is_building==1, # bool
                                         dims=('y', 'x'),
                                         attrs={"standard_name": "Building pixels",
                                                "units": "no units",
@@ -156,7 +158,7 @@ def get_buildings_mask(dataset, verbose=True):
 
 
 
-def get_water_mask(dataset):
+def get_water_mask(dataset : xr.Dataset):
 
     bounds = dataset.DSM.rio.reproject("epsg:4326").rio.bounds() # WGS84 bounds
     gdf = get_bdtopo(bounds, feature="surface_hydrographique", epsg=f"EPSG:{dataset.rio.crs.to_epsg()}")
@@ -179,9 +181,7 @@ def get_water_mask(dataset):
 
     is_water[is_water==False] = 0
 
-    is_water = is_water == 1 # to boolean
-
-    dataset["water_mask"] = xr.DataArray(is_water,
+    dataset["water_mask"] = xr.DataArray(is_water == 1, # bool
                                     dims=('y', 'x'),
                                     attrs={"standard_name": "Water pixels",
                                            "units": "no units",

@@ -2,6 +2,7 @@ import cartopy.mpl.geoaxes
 import matplotlib.pyplot as plt
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import cartopy.crs as ccrs
+import numpy as np
 
 def get_projection(crs):
     epsg = crs.to_epsg()
@@ -36,7 +37,15 @@ def plot_dataset(dataset, layer, ax=None, gridlines=True, **kwargs):
 
     plot_kwargs.update(kwargs)
 
-    quadmesh = dataset[layer].plot(ax=ax, **plot_kwargs)
+    to_plot = dataset[layer].copy()
+
+    if to_plot.dtype == 'bool':
+        to_plot = to_plot.where(to_plot, np.nan) # mask False values
+
+    if "mask" in dataset.data_vars:
+        to_plot = to_plot.where(dataset.mask)
+
+    quadmesh = to_plot.plot(ax=ax, **plot_kwargs)
 
     if gridlines:
         gl = ax.gridlines(
