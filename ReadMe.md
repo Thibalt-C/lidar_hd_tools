@@ -21,6 +21,7 @@
 	- [OCS-GE implementations](#ocs-ge-implementations)
 	- [BD-ORTHO implementations](#bd-ortho-implementations)
 - [Visualisation](#visualisation)
+- [Command-line-interface tools](#command-line-interface-tools)
 
 ## Module overview
 
@@ -303,3 +304,20 @@ import lidar_hd_tools.visualisation as vis
 > | Parameter | Type | Description |
 > |--|--|--|
 > | `ax`                      | `cartopy.mpl.geoaxes.GeoAxes`      | Axis associated to the figure. |
+
+
+## Command-line-interface tools
+
+The `lidar_hd_tools` module can be called on a terminal using the following command:
+
+```
+python -m lidar_hd_tools
+```
+
+This will open a command-line-interface (CLI) from which it is possible to download the LiDAR data (3D point clouds + DEM + DSM) by:
+1. giving a squared area of interest based on the center’s geographic coordinates and an extent in meters
+2. giving a path towards a geofile that can be opened using `geopandas.read_file` function.
+
+It is also possible from this CLI to change the location of the downloaded data. The merged DSM/DEM created in the process can be saved as a netcdf4 (`.nc` format) file.
+
+A command with arguments that would automate a download without prompts is not available for now. It is then better to import the module (see [getting started](#getting-started) chapter) and to create a dedicated python script.

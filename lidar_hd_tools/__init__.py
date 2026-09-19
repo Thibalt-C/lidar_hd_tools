@@ -16,9 +16,7 @@ import lidar_hd_tools.visualisation as visualisation
 __version__ = "0.1.3"
 __authors__ = ['<CHARDON_Thibault>']
 __release__ = '2026-09-19'
-__releasecomment__ = """ 
-Added a CLI when calling the module from a terminal -> python -m lidar_hd_tools
-"""
+__releasecomment__ = """Added a CLI when calling the module from a terminal -> python -m lidar_hd_tools"""
 
 def about():
     print('lidar_hd_tools module\n')
