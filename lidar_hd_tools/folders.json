@@ -1,5 +1,5 @@
 {
-  "DEM": "/Volumes/THIBALT/LIDARHD/tiles/DEM/",
-  "DSM": "/Volumes/THIBALT/LIDARHD/tiles/DSM/",
-  "lidar": "/Volumes/THIBALT/LIDARHD/tiles/lidar/"
+    "DEM": "/Volumes/THIBALT/downloaded/LIDARHD/tiles/DEM/",
+    "DSM": "/Volumes/THIBALT/downloaded/LIDARHD/tiles/DSM/",
+    "lidar": "/Volumes/THIBALT/downloaded/LIDARHD/tiles/lidar/"
 }

@@ -2,8 +2,10 @@ import json
 import warnings
 import os
 
+json_path = "lidar_hd_tools/folders.json"
+
 try:
-    with open("lidar_hd_tools/folders.json", "r", encoding="utf-8") as file:
+    with open(json_path, "r", encoding="utf-8") as file:
         folders = json.load(file)
 except FileNotFoundError:
     warnings.warn("`folders.json` not found. You need to configure a json file.")
@@ -28,3 +30,18 @@ def check_folders():
         if not os.path.exists(folders[key]):
             raise FileNotFoundError(f"Folder {folders[key]} not found.")
     return
+
+def change_folder(key):
+
+    if key in folders.keys():
+        folders[key] = input(f"Enter the path to the {key} folder: ")
+    else:
+        raise Exception(f"Key {key} not found in folders.json.")
+
+    if not os.path.exists(folders[key]):
+        raise FileNotFoundError(f"Folder {folders[key]} not found.")
+
+    with open(json_path, "w", encoding="utf-8") as file:
+        json.dump(folders, file, indent=4)
+
+    return print(f"-> Saved {key} folder to {folders[key]}")
