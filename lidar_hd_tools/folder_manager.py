@@ -2,7 +2,7 @@ import json
 import warnings
 import os
 
-json_path = "lidar_hd_tools/folders.json"
+json_path = "./folders.json"
 
 try:
     with open(json_path, "r", encoding="utf-8") as file:
