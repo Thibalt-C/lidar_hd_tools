@@ -11,6 +11,8 @@ except FileNotFoundError:
     warnings.warn("`folders.json` not found. You need to configure a json file.")
     print("Data will be saved in the CWD.")
     folders = {"lidar":"", "DSM":"", "DEM":""}
+    with open(json_path, "w", encoding="utf-8") as file:
+        json.dump(folders, file, indent=4)
 except json.JSONDecodeError:
     warnings.warn("decode error caused by `folders.json`. Please set a correct json file.")
     print("Data will be saved in the CWD.")

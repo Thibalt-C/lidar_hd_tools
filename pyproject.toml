@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lidar_hd_tools"
-version = "0.1.5"
+version = "0.1.6"
 authors = [
-  { name="Thibault Chardon", email="chardon@ipgp.fr" },
+  { name="Thibault Chardon", email="pypi.flaxseed411@passinbox.com" },
 ]
 description = "Python library for quick use of IGN's LiDAR-HD data."
 readme = "ReadMe.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "cartopy",
 	"cmcrameri",
