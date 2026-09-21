@@ -3,21 +3,14 @@
 
 <div align=center>
 
-[![Python Version](https://img.shields.io/pypi/pyversions/lidar_hd_tools)](https://pypi.org/project/lidar_hd_tools/)
-[![PyPI Version](https://img.shields.io/pypi/v/lidar_hd_tools.svg)](https://pypi.org/project/lidar_hd_tools/)
-![GitHub last commit](https://img.shields.io/github/last-commit/lidar_hd_tools/lidar_hd_tools)
+![PyPI Python Version](https://img.shields.io/pypi/pyversions/lidar_hd_tools)
+![PyPI Version](https://img.shields.io/pypi/v/lidar_hd_tools)
+![GitHub last commit](https://img.shields.io/github/last-commit/Thibalt-C/lidar_hd_tools)
 
 </div>
 
 
 ![ ](example_figures/fig1.png)
-
-**Module’s name**: `lidar_hd_tools` \
-**Release**:0.1.3 \
-**Date**:September 2026 \
-**Author**: Thibault CHARDON (IPGP, Université Paris Cité) \
-\
-***CC-BY 4.0 licence** (https://creativecommons.org/licenses/by/4.0/deed.fr).*
 
 - [Module overview](#module-overview)
 - [About LiDAR HD programme](#about-lidar-hd-programme)
@@ -44,49 +37,13 @@ As IGN (Institut national de l’information géographique et forestière, Franc
 
 LiDAR HD programme is one of the main projects currently managed by IGN, with numerous implications for public action in territories, as well as research works at local or regional scale. All the French territory (except French Guyana) is expected to be covered by the end of 2026 — current coverage is provided [here](https://macarte.ign.fr/carte/mThSup/diffusionMNxLiDARHD). Digital models, namely elevation (DEM), surface (DSM) and height (DHM) are produced and delivered by IGN, as well as 3D point clouds. All of these products are grouped by 4 km² tiles, that can be downloaded using API requests or the dedicated [online platform](https://cartes.gouv.fr/telechargement/IGNF_NUAGES-DE-POINTS-LIDAR-HD). If the online platform provides tools to manually select several tools efficiently, there is for now no automated downloading of such data for geocoded polygons.
 
-## Requirements
+## Installation
 
-Several libraries are required to work with a fully functional `lidar_hd_tools` module. See below the code to create an ideal environment for the module to work properly. First we create an empty environment:
-
-```
-conda create --name lidar_hd_env python=3.10
-```
-
-We can activate it using:
+`lidar_hd_tools` can be installed from the PyPI repository:
 
 ```
-conda activate lidar_hd_env 
+pip install lidar_hd_tools
 ```
-
-Then we install the required libraries available on channel `conda-forge`:
-
-```
-conda install -c conda-forge cartopy \
-			     cmcrameri \
-			     geopandas \
-			     laspy \
-			     matplotlib \
-			     numpy \
-			     owslib \
-			     pandas \
-			     pvlib-python \
-			     rasterio \
-			     requests \
-			     rioxarray \
-			     scipy \
-			     shapely \
-			     tqdm \
-			     xarray \
-			     pip -y
-```
-
-and one extra library for relief visualisation, based on [Zakšek et al. (2011)](https://www.mdpi.com/2072-4292/3/2/398) & [Kokalj (2025)](https://doi.org/10.1002/arp.70002):
-
-```
-conda install -c rvtpy rvt_py
-```
-
-If the installation fails on your environment please consider using an empty environment as described above.
 
 ## Getting started
 
@@ -137,7 +94,7 @@ dataset = download_data(gdf,
 
 Below is a description of such function and its parameters. Decimation factors make more efficient the loading and computation of data as python objects, but are not affecting the size of the stored files (that are full-sized data). Derived data computed when `build_dataset` is `True` are: sky viewing factor (SVF), slope aspect, slope gradient and shadow — shadow is computed for 9 by 16 different sun positions, for now there is no handy parameter to change this amount. The `data_for_derivation` parameter is to change depending on the context: sometimes it is meaningful to use the DSM (e.g. urban studies) and other times the DEM (e.g. landslide monitoring). DHM is also derived by subtracting DSM with DEM, as well as vegetation cover by counting the number of classified points of LiDAR data per pixel.
 
-Unbuilt mode (`not build_dataset`) can be used if you are more interested by the point cloud itself, as it outputs both the unbuilt dataset (containing only DSM and DEM) and the list of point clouds associated to the same area of interest.
+Unbuilt mode (`build_dataset=False`) can be used if you are more interested by the point cloud itself, as it outputs both the unbuilt dataset (containing only DSM and DEM) and the list of point clouds associated to the same area of interest.
 
 Built and unbuilt dataset are both `xarray.Dataset` objects, with a `rio` accessor from `rioxarray` (see [here](https://corteva.github.io/rioxarray/html/getting_started/getting_started.html) for detail). This allows them to be reprojected easily, using `xarray.Dataset.rio.reproject`.
 
