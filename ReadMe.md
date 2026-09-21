@@ -10,7 +10,7 @@
 </div>
 
 
-![ ](example_figures/fig1.png)
+![ ](https://github.com/Thibalt-C/lidar_hd_tools/blob/95b48b9a84f3e573f3af6222947d57a9d781d3ec/example_figures/fig1.png)
 
 - [Module overview](#module-overview)
 - [About LiDAR HD programme](#about-lidar-hd-programme)
@@ -30,7 +30,7 @@
 
 As IGN (Institut national de l’information géographique et forestière, France) is progressively covering French territory with high density LiDAR data (LiDAR HD), the parsing of this data using the currently provided API is not well efficient yet. The `lidar_hd_tools`  python package aims to provide an easy-to-use framework for loading LiDAR HD data, with very few mandatory parameters to provide while keeping the possibility to personalise the query to fit various uses, from urban morphology to research in mountainous context.
 
-![ ](example_figures/fig2.png)
+![ ](https://github.com/Thibalt-C/lidar_hd_tools/blob/95b48b9a84f3e573f3af6222947d57a9d781d3ec/example_figures/fig2.png)
 
 
 ## About LiDAR HD programme
