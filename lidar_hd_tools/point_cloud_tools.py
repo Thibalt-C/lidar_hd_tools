@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import xarray as xr
 from tqdm import tqdm
-from lidar_hd_tools.folder_manager import lidar_tiles
+from .folder_manager import lidar_tiles
 
 
 

@@ -7,8 +7,8 @@ import rioxarray as rxr
 import cmcrameri.cm as cm
 from tqdm import tqdm
 from rvt.vis import sky_view_factor, slope_aspect
-from lidar_hd_tools.shadow import add_shadow
-from lidar_hd_tools.folder_manager import DSM_tiles, DEM_tiles
+from .shadow import add_shadow
+from .folder_manager import DSM_tiles, DEM_tiles
 
 original_resolution = 0.5 # m
 tile_size = 2000 # m

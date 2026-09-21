@@ -1,5 +1,15 @@
 # `lidar_hd_tools`: for a quick and efficient loading of IGN’s LiDAR HD data
 
+
+<div align=center>
+
+[![Python Version](https://img.shields.io/pypi/pyversions/lidar_hd_tools)](https://pypi.org/project/lidar_hd_tools/)
+[![PyPI Version](https://img.shields.io/pypi/v/lidar_hd_tools.svg)](https://pypi.org/project/lidar_hd_tools/)
+![GitHub last commit](https://img.shields.io/github/last-commit/lidar_hd_tools/lidar_hd_tools)
+
+</div>
+
+
 ![ ](example_figures/fig1.png)
 
 **Module’s name**: `lidar_hd_tools` \

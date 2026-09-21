@@ -1,10 +1,8 @@
-from lidar_hd_tools.metadata import get_metadata
-from lidar_hd_tools.folder_manager import lidar_tiles, DSM_tiles, DEM_tiles, check_folders
-from lidar_hd_tools.tiles_tools import download_tiles, dem_dsm_xarray, compute_subproducts, original_resolution
-from lidar_hd_tools.point_cloud_tools import download_lidar, get_vegetation_cover
-from lidar_hd_tools.utils import clip_dataset, compress_dataset, geodataframe_from_coordinates
-
-
+from .metadata import get_metadata
+from .folder_manager import check_folders
+from .tiles_tools import download_tiles, dem_dsm_xarray, compute_subproducts, original_resolution
+from .point_cloud_tools import download_lidar, get_vegetation_cover
+from .utils import clip_dataset, compress_dataset
 
 
 def download_data(gdf,
