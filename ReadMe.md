@@ -2,9 +2,9 @@
 
 
 <div align=center>
-
-![PyPI Python Version](https://img.shields.io/pypi/pyversions/lidar_hd_tools)
-![PyPI Version](https://img.shields.io/pypi/v/lidar_hd_tools)
+	
+![PyPI Python Version](https://img.shields.io/pypi/pyversions/lidar_hd_tools?link=www.pypi.org%2Fp%2Flidar-hd-tools)
+![PyPI Version](https://img.shields.io/pypi/v/lidar_hd_tools?link=www.pypi.org%2Fp%2Flidar-hd-tools)
 ![GitHub last commit](https://img.shields.io/github/last-commit/Thibalt-C/lidar_hd_tools)
 
 </div>
@@ -63,15 +63,19 @@ import lidar_hd_tools as lhd
 
 ### Default folders
 
-When imported, `lidar_hd_tools` will look for folders where to store imported data. The name and path of those folder can be set on the `folders.json` file, which can be found inside the `lidar_hd_tools/` library folder.
-
-You can check the configured folders by typing on a python script / Jupyter notebook:
+When imported, `lidar_hd_tools` will look for folders where to store imported data. You can check the configured folders by typing on a python script / Jupyter notebook:
 
 ```
 lhd.current_folders()
 ```
 
 This will show the folders associated to each type of data.
+
+If you want to edit those folders, you can use the following command, with `key='DSM'` or `key='DEM'` or `key='lidar'`:
+
+```
+lhd.change_folder(key)
+```
 
 ### Workflow starting from a `geopandas.GeoDataFrame` object
 
