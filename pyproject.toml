@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lidar_hd_tools"
-version = "0.1.6"
+version = "0.1.7"
 authors = [
   { name="Thibault Chardon", email="pypi.flaxseed411@passinbox.com" },
 ]
@@ -31,7 +31,6 @@ dependencies = [
 ]
 
 classifiers = [
-    "Programming Language :: Python :: 3",
 	"Programming Language :: Python :: 3.10",
     "Operating System :: OS Independent",
 ]
