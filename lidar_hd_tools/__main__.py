@@ -3,6 +3,8 @@ Command-line interface of the lidar_hd_tools package.
 """
 
 import lidar_hd_tools as lhd
+from . import tiles_tools
+from . import point_cloud_tools
 import geopandas as gpd
 import pickle
 import os
@@ -125,7 +127,7 @@ if __name__ == "__main__":
                     ds = dataset.copy()
                     for layer in ds.data_vars: # for netcdf4 compatibility
                         ds[layer].attrs["plot_kwargs"] = str(ds[layer].attrs["plot_kwargs"])
-                    filename = f"{str(lon).replace(".", "_")}_{str(lat).replace(".", "_")}.nc"
+                    filename = f'{str(lon).replace(".", "_")}_{str(lat).replace(".", "_")}.nc'
                     filepath = os.path.join(os.getcwd(), filename)
                     ds.to_netcdf(filepath)
                     print(f"\nSuccessfully saved dataset -> {filepath}")
@@ -145,10 +147,10 @@ if __name__ == "__main__":
                     plt.show()
 
                 elif a == "d":
-                    dataset = lhd.tiles_tools.compute_subproducts(dataset,
+                    dataset = tiles_tools.compute_subproducts(dataset,
                                                                   dataset.rio.resolution()[0]
                                                                   )
-                    dataset = lhd.point_cloud_tools.get_vegetation_cover(dataset, clouds)
+                    dataset = point_cloud_tools.get_vegetation_cover(dataset, clouds)
                 else:
                     pass
 
