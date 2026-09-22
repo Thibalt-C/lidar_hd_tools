@@ -1,11 +1,9 @@
+import shutil
 import os
-import sys
-sys.path.insert(0, os.path.abspath("../src"))
 
-project = "lidar_hd_tools"
-extensions = ["myst_parser"]
-templates_path = ["_templates"]
-exclude_patterns = []
+# Copier ReadMe.md dans docs/
+source_readme = os.path.abspath("../ReadMe.md")
+dest_readme = os.path.abspath("ReadMe.md")
 
-html_theme = "alabaster"
-master_doc = "index"
+if os.path.exists(source_readme):
+    shutil.copyfile(source_readme, dest_readme)
