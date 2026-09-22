@@ -24,11 +24,8 @@ __all__ = [
     "visualisation"
 ]
 
-from .folder_manager import folders, current_folders, change_folder
-from .lidar_hd_tools import download_data, clip_dataset, compress_dataset
-from .bd_topo_tools import get_buildings_mask, get_water_mask
-from .ocs_ge_tools import get_land_occupation
-from .bd_ortho_tools import get_orthoimage
+from .lidar_hd import download_data, current_folders, change_folder
+from .IGN_extra import get_buildings_mask, get_water_mask, get_land_occupation, get_orthoimage
 from .utils import clip_dataset, compress_dataset, geodataframe_from_coordinates
 from . import visualisation
 

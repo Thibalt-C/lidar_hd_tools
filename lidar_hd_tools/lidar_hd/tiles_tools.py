@@ -4,28 +4,32 @@ import os
 import time
 import xarray as xr
 import rioxarray as rxr
-import cmcrameri.cm as cm
+from cmcrameri.cm import cmaps
 from tqdm import tqdm
 from rvt.vis import sky_view_factor, slope_aspect
 from .shadow import add_shadow
 from .folder_manager import DSM_tiles, DEM_tiles
+from typing import List, Optional, Tuple
 
 original_resolution = 0.5 # m
 tile_size = 2000 # m
 
-def download_tiles(dsm_tiles_urls,
-                   dem_tiles_urls,
-                   dsm_tiles_filenames,
-                   dem_tiles_filenames,
-                   decimation_factor = 10,
-                   dem_tiles_path=DEM_tiles,
-                   dsm_tiles_path=DSM_tiles,
-                   verbose=True
-                   ):
+def download_tiles(
+        dsm_tiles_urls : List[str],
+        dem_tiles_urls : List[str],
+        dsm_tiles_filenames : List[str],
+        dem_tiles_filenames : List[str],
+        decimation_factor : Optional[int] = 10,
+        dem_tiles_path : Optional[str] = DEM_tiles,
+        dsm_tiles_path : Optional[str] = DSM_tiles,
+        verbose : Optional[bool] = True
+) -> Tuple[np.ndarray, np.ndarray] :
 
     def _process_tiles(urls, filenames, tiles_path, data_type):
 
-        iterator = tqdm(enumerate(urls), total=len(urls), desc=f"Loading {data_type}") if verbose else enumerate(urls)
+        iterator = tqdm(
+            enumerate(urls), total=len(urls), desc=f"Loading {data_type}"
+        ) if verbose else enumerate(urls)
 
         for n, url in iterator:
             filename = filenames[n]
@@ -64,9 +68,10 @@ def download_tiles(dsm_tiles_urls,
 
 
 
-def dem_dsm_xarray(sets,
-                   projection
-                   ):
+def dem_dsm_xarray(
+        sets : Tuple[np.ndarray, np.ndarray],
+        projection : str
+) -> xr.Dataset :
 
     dataset = xr.Dataset(
         {
@@ -76,7 +81,7 @@ def dem_dsm_xarray(sets,
                 coords={'x': sets[0][0, 0, :], 'y': sets[0][1, :, 0]},
                 attrs={'standard_name': "Digital surface model",
                        'units': 'm',
-                       'plot_kwargs':{"cmap":cm.batlow}}
+                       'plot_kwargs':{"cmap":cmaps["batlow"]}}
             ),
 
             'DEM': xr.DataArray(
@@ -84,7 +89,7 @@ def dem_dsm_xarray(sets,
                 coords={'x': sets[1][0, 0, :], 'y': sets[1][1, :, 0]},
                 attrs={'standard_name': "Digital elevation model",
                        'units': 'm',
-                       'plot_kwargs':{"cmap":cm.batlow}}
+                       'plot_kwargs':{"cmap":cmaps["batlow"]}}
             )
 
         }
@@ -96,7 +101,13 @@ def dem_dsm_xarray(sets,
 
 
 
-def compute_subproducts(dataset, resolution, data_for_derivation="DSM", verbose=True):
+def compute_subproducts(
+        dataset : xr.Dataset,
+        data_for_derivation : Optional[str] = "DSM",
+        verbose : Optional[bool] = True
+) -> xr.Dataset :
+
+    resolution = dataset.rio.resolution()[0]
 
     dataset = add_shadow(dataset, resolution=resolution, data_for_derivation=data_for_derivation, verbose=verbose)
 
@@ -119,26 +130,26 @@ def compute_subproducts(dataset, resolution, data_for_derivation="DSM", verbose=
 
     dataset.DHM.attrs = {'standard_name': "Digital height model",
                          'units': 'm',
-                         'plot_kwargs': {'cmap': cm.batlow,
+                         'plot_kwargs': {'cmap': cmaps["batlow"],
                                          'vmin':dataset.DHM.min(),
                                          'vmax':dataset.DHM.max()}
                          }
 
     dataset.SVF.attrs = {'standard_name': "Sky view factor",
                          'units': 'no units',
-                         'plot_kwargs':{'cmap':cm.grayC,
+                         'plot_kwargs':{'cmap':cmaps["grayC"],
                                         'vmin':0, 'vmax':1}
                          }
 
     dataset.slope_grad.attrs = {'standard_name': "Slope gradient",
                                 'units': 'rd',
-                                'plot_kwargs':{'cmap':cm.tofino,
+                                'plot_kwargs':{'cmap':cmaps["tofino"],
                                                'vmin':0, 'vmax':np.pi}
                                 }
 
     dataset.aspect.attrs = {'standard_name': "Slope aspect",
                             'units': 'rd',
-                            'plot_kwargs':{'cmap':cm.vikO,
+                            'plot_kwargs':{'cmap':cmaps["vikO"],
                                            'vmin':-np.pi, 'vmax':np.pi}
                             }
 

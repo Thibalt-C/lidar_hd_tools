@@ -6,15 +6,36 @@ import pandas as pd
 import xarray as xr
 from tqdm import tqdm
 from .folder_manager import lidar_tiles
+from typing import List, Optional, Tuple
 
 
+def download_lidar(
+        lidar_urls : List[str],
+        lidar_filenames : List[str],
+        lidar_path : Optional[str] = lidar_tiles,
+        decimation_factor : Optional[int] = 10,
+        verbose : Optional[bool] = True
+) -> List[laspy.LasData] :
+    """
 
-def download_lidar(lidar_urls,
-                   lidar_filenames,
-                   lidar_path=lidar_tiles,
-                   decimation_factor=10,
-                   verbose=True
-                   ):
+    Parameters:
+    ----------
+    lidar_urls : list of strings
+        URLs of the LiDAR files (3D point clouds) to download
+    lidar_filenames : list of strings
+        filenames of the LiDAR files to download
+    lidar_path : string, optional
+        location where to save the LiDAR files
+    decimation_factor : int, optional
+        decimation factor to apply to the LiDAR files (number of points to keep)
+    verbose : bool, optional
+        controls the verbosity (activated or deactivated). Default is True.
+
+    Returns:
+    ----------
+    clouds : list of `laspy.LasData`
+        list of `laspy.LasData` objects containing the (eventually decimated) 3D point clouds of each tile
+    """
 
     clouds = []
 
@@ -44,7 +65,10 @@ def download_lidar(lidar_urls,
     return clouds
 
 
-def decimate_points(las, factor=10):
+def decimate_points(
+        las : laspy.LasData,
+        factor : int
+) -> laspy.LasData:
 
     points = las.points
     n_points = len(points)
@@ -54,12 +78,13 @@ def decimate_points(las, factor=10):
     return las[keep_indices]
 
 
-def density_per_point(x,
-                      y,
-                      bounds,
-                      lengths,
-                      name
-                      ):
+def density_per_point(
+        x : np.ndarray,
+        y : np.ndarray,
+        bounds : Tuple[float],
+        lengths : Tuple[int],
+        name : str
+) -> np.ndarray :
 
     dx = abs(bounds[0]-bounds[2])/lengths[0]
     dy = abs(bounds[1]-bounds[3])/lengths[1]
@@ -98,7 +123,26 @@ def density_per_point(x,
 
 
 
-def get_vegetation_cover(dataset, clouds, verbose=True):
+def get_vegetation_cover(
+        dataset : xr.Dataset,
+        clouds : List[laspy.LasData],
+        verbose : Optional[bool] = True
+) -> xr.Dataset :
+    """
+    Parameters:
+    ----------
+    dataset : `xarray.Dataset`
+        dataset of a given spatial resolution and geocoded (using rioxarray)
+    clouds : list of `laspy.LasData`
+        list of `laspy.LasData` objects containing the (eventually decimated) 3D point clouds of each tile
+    verbose : bool, optional
+        controls the verbosity (activated or deactivated). Default is True.
+
+    Returns:
+    ----------
+    dataset : `xarray.Dataset`
+        Input dataset with added vegetation cover layer
+    """
 
     x = []
     y = []

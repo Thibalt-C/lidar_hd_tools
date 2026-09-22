@@ -3,9 +3,28 @@ import rioxarray
 import xarray as xr
 import geopandas as gpd
 from shapely.geometry import Polygon
+from typing import Optional
 
 
-def clip_dataset(dataset, gdf):
+def clip_dataset(
+        dataset : xr.Dataset,
+        gdf : gpd.GeoDataFrame
+) -> xr.Dataset :
+    """
+    Clips a dataset to the given geo-file.
+
+    Parameters:
+    ----------
+    dataset : `xarray.Dataset`
+        dataset geocoded using rioxarray
+    gdf : `geopandas.GeoDataFrame`
+        geo-file of the location of interest
+
+    Return:
+    ----------
+    dataset : `xarray.Dataset`
+        Clipped dataset
+    """
 
     dataset = dataset.rio.clip(gdf.geometry.values, gdf.crs, drop=True)
 
@@ -24,7 +43,25 @@ def clip_dataset(dataset, gdf):
     return dataset
 
 
-def compress_dataset(dataset, verbose=False):
+def compress_dataset(
+        dataset : xr.Dataset,
+        verbose : Optional[bool] = False
+) -> xr.Dataset :
+    """
+    Compresses the created rasters using lower precision data types.
+
+    Parameters:
+    ----------
+    dataset : `xarray.Dataset`
+        dataset geocoded using rioxarray
+    verbose : bool, optional
+        controls the verbosity (activated or deactivated). Default is False.
+
+    Return:
+    ----------
+    dataset : `xarray.Dataset`
+        Compressed dataset
+    """
 
     original_size = dataset.nbytes / 1e9 # GB
 
@@ -54,9 +91,29 @@ def compress_dataset(dataset, verbose=False):
     return dataset
 
 
-def geodataframe_from_coordinates(lat, lon,  # degrees (WGS84)
-                                  size=200  # meters
-                                  ):
+def geodataframe_from_coordinates(
+        lat : float,
+        lon : float,
+        size : Optional[float] = 500
+) -> gpd.GeoDataFrame :
+    """
+    Creates a geodataframe from a given position in geographic coordinates, and an extent in meters.
+
+    Parameters:
+    ----------
+    lat : float
+        latitude of the location of interest
+    lon : float
+        longitude of the location of interest
+    size : float, optional
+        extent around the location of interest in meters. Default is 500 meters.
+
+    Return:
+    ----------
+    gdf : `geopandas.GeoDataFrame`
+        generated geo-file of the location of interest
+    """
+
     # plane approximation
     lat_degree = size / 111320.0
     lon_degree = size / (111320.0 * abs(np.cos(np.radians(lat))))

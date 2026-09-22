@@ -1,4 +1,6 @@
+import owslib.feature.wfs200
 from owslib.wfs import WebFeatureService
+import owslib
 import geopandas as gpd
 import io
 import numpy as np
@@ -8,11 +10,24 @@ import xarray as xr
 import time
 import rioxarray
 from tqdm import tqdm
+from typing import Tuple, Optional
 
-wfs_url = "https://data.geopf.fr/wfs/ows?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities"
-wfs = WebFeatureService(url=wfs_url, version="2.0.0")
 
-def get_bdtopo(boundaries, feature, epsg):
+def connect_wfs(
+        url : str = "https://data.geopf.fr/wfs/ows?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities"
+) -> owslib.feature.wfs200.WebFeatureService_2_0_0 :
+
+    wfs = WebFeatureService(url=url, version="2.0.0")
+
+    return wfs
+
+
+def get_bd_topo(
+        boundaries : Tuple[float],
+        feature : str,
+        epsg : str,
+        wfs : owslib.feature.wfs200.WebFeatureService_2_0_0
+) -> gpd.GeoDataFrame :
 
     for layer_name in wfs.contents:
         if (f'BDTOPO_V3:{feature}' in layer_name):
@@ -40,9 +55,10 @@ def get_bdtopo(boundaries, feature, epsg):
 
 
 
-def divide_into_smaller_bboxes(dataset,
-                               size=250 # meters
-                               ):
+def divide_into_smaller_bboxes(
+        dataset : xr.Dataset,
+        size : Optional[float] = 250.0 # meters
+) -> gpd.GeoDataFrame :
 
     x , y = np.meshgrid(dataset.x, dataset.y)
     decim = int(size/abs(dataset.x.values[0]-dataset.x.values[1]))
@@ -103,8 +119,12 @@ def divide_into_smaller_bboxes(dataset,
 
 
 
-def get_buildings(dataset : xr.Dataset,
-                  verbose : bool =True):
+def get_buildings(
+        dataset : xr.Dataset,
+        verbose : Optional[bool] = True
+) -> gpd.GeoDataFrame :
+
+    wfs = connect_wfs()
 
     bboxes_gdf = divide_into_smaller_bboxes(dataset)
 
@@ -114,7 +134,10 @@ def get_buildings(dataset : xr.Dataset,
 
         bounds = bboxes_gdf.iloc[row].geometry.bounds
 
-        box_gdf = get_bdtopo(bounds, feature="batiment", epsg=f"EPSG:{dataset.rio.crs.to_epsg()}")
+        box_gdf = get_bd_topo(bounds,
+                             feature="batiment",
+                             epsg=f"EPSG:{dataset.rio.crs.to_epsg()}",
+                             wfs=wfs)
 
         time.sleep(0.1) # avoid overloading the server
 
@@ -130,8 +153,26 @@ def get_buildings(dataset : xr.Dataset,
 
 
 
-def get_buildings_mask(dataset : xr.Dataset,
-                       verbose : bool =True):
+def get_buildings_mask(
+        dataset : xr.Dataset,
+        verbose : Optional[bool] = True
+) -> xr.Dataset :
+    """
+    Downloads a rasterised version of the buildings map from BD TOPO (IGN)
+    with a resolution matching the used dataset.
+
+    Parameters:
+    ----------
+    dataset : `xarray.Dataset`
+        Dataset of a given spatial resolution and geocoded (using rioxarray)
+    verbose : bool, optional
+        Controls the verbosity (activated or deactivated). Default is True.
+
+    Returns:
+    ----------
+    dataset : `xarray.Dataset`
+        Input dataset with added buildings mask layer
+            """
 
     gdf = get_buildings(dataset, verbose=verbose)
 
@@ -141,8 +182,6 @@ def get_buildings_mask(dataset : xr.Dataset,
 
     is_building = np.zeros(dataset.mask.shape).astype(np.uint8)
     is_building[dataset.mask == 1] = gdf.union_all().intersects([Point(point) for point in points])
-    #is_building[is_building == False] = 0
-
 
     dataset["buildings_mask"] = xr.DataArray(is_building==1, # bool
                                         dims=('y', 'x'),
@@ -158,11 +197,32 @@ def get_buildings_mask(dataset : xr.Dataset,
 
 
 
-def get_water_mask(dataset : xr.Dataset):
+def get_water_mask(dataset : xr.Dataset) -> xr.Dataset :
+    """
+    Downloads a rasterised version of the water map from BD TOPO (IGN)
+    with a resolution matching the used dataset.
+    Water below bridges or buildings is normally excluded.
+
+    Parameters:
+    ----------
+    dataset : `xarray.Dataset`
+        Dataset of a given spatial resolution and geocoded (using rioxarray)
+
+    Returns:
+    ----------
+    dataset : `xarray.Dataset`
+        Input dataset with added water mask layer
+    """
+
+    wfs = connect_wfs()
 
     bounds = dataset.DSM.rio.reproject("epsg:4326").rio.bounds() # WGS84 bounds
-    gdf = get_bdtopo(bounds, feature="surface_hydrographique", epsg=f"EPSG:{dataset.rio.crs.to_epsg()}")
-    gdf = gdf.dropna(axis=1, how='all').drop_duplicates().reset_index(drop=True)
+    crs = dataset.rio.crs.to_epsg()
+
+    gdf = get_bd_topo(bounds,
+                     feature="surface_hydrographique",
+                     epsg=f"EPSG:{crs}",
+                     wfs=wfs).dropna(axis=1, how='all').drop_duplicates().reset_index(drop=True)
 
     is_water = np.zeros(dataset.mask.shape).astype(np.uint8)
 
@@ -171,8 +231,11 @@ def get_water_mask(dataset : xr.Dataset):
         points = np.stack([x[dataset.mask==1], y[dataset.mask==1]], axis=-1)
         is_water[dataset.mask==1] = gdf.union_all().intersects([Point(point) for point in points])
 
-    gdf = get_bdtopo(bounds, feature="construction_surfacique", epsg=f"EPSG:{dataset.rio.crs.to_epsg()}")
-    gdf = gdf.dropna(axis=1, how='all').drop_duplicates().reset_index(drop=True)
+    gdf = get_bd_topo(bounds,
+                      feature="construction_surfacique",
+                      epsg=f"EPSG:{crs}",
+                      wfs=wfs).dropna(axis=1, how='all').drop_duplicates().reset_index(drop=True)
+
     if len(gdf)!=0:
         gdf = gdf.loc[(gdf['nature'] == 'Pont') | (gdf['nature'] == 'Ecluse')].reset_index(drop=True)
         is_bridge = np.full(dataset.mask.shape, 0)

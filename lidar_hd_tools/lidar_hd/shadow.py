@@ -2,19 +2,21 @@ import numpy as np
 from rvt.vis import horizon_generate_pyramids
 from scipy.interpolate import RectBivariateSpline
 import xarray as xr
-import cmcrameri.cm as cm
+from cmcrameri.cm import cmaps
 from tqdm import tqdm
+from typing import Optional
 
 
-def get_shadow(dem,
-                     resolution,
-                     shadow_az=315,
-                     shadow_el=35,
-                     max_fine_radius=100,
-                     num_directions=32,
-                     ve_factor=1,
-                     no_data=None
-                     ):
+def get_shadow(
+        dem : np.ndarray,
+        resolution : float,
+        shadow_az : Optional[float] = 315,
+        shadow_el : Optional[float] = 35,
+        max_fine_radius : Optional[float] = 100,
+        num_directions : Optional[int] = 32,
+        ve_factor : Optional[float] = 1,
+        no_data : Optional[float] = None
+) -> np.ndarray :
     """
     Modified from rvt.vis module (Žiga Kokalj, Žiga Maroh, Krištof Oštir, Klemen Zakšek and Nejc Čož, 2022).
     Original code: https://rvt-py.readthedocs.io/en/latest/_modules/rvt/vis.html#sky_illumination
@@ -90,7 +92,12 @@ def get_shadow(dem,
 
 
 
-def add_shadow(dataset, resolution, data_for_derivation, verbose=True):
+def add_shadow(
+        dataset : xr.Dataset,
+        resolution : float,
+        data_for_derivation : str,
+        verbose : Optional[bool] = True
+) -> xr.Dataset :
 
     dataset.coords['sun_elevation'] = np.linspace(0, 90, 9)
     dataset.coords['sun_azimuth'] = np.linspace(0, 360 - 360 / 16, 16)
@@ -130,29 +137,9 @@ def add_shadow(dataset, resolution, data_for_derivation, verbose=True):
         },
     )
 
-
-    # dataset["shadow"] = xr.apply_ufunc(
-    #     shadow_wrapper,
-    #     dataset[data_for_derivation],
-    #     dataset.coords["sun_azimuth"],
-    #     dataset.coords["sun_elevation"],
-    #     input_core_dims=[
-    #         ["y", "x"],  # DSM
-    #         [],  # sun_azimuth (scalar)
-    #         [],  # sun_elevation (scalar)
-    #     ],
-    #     output_core_dims=[["y", "x"]],
-    #     kwargs={
-    #         "resolution": resolution,
-    #     },
-    #     vectorize=True,
-    #     output_dtypes=[np.bool_],
-    #     exclude_dims=set(),
-    # )
-
     dataset.shadow.attrs = {'standard_name': "Shadow",
                             'units': 'no units',
-                            'plot_kwargs': {'cmap': cm.grayC_r,
+                            'plot_kwargs': {'cmap': cmaps["grayC_r"],
                                             'vmin': 0,
                                             'vmax': 1,
                                             "add_colorbar": False

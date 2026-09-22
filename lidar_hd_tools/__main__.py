@@ -3,8 +3,7 @@ Command-line interface of the lidar_hd_tools package.
 """
 
 import lidar_hd_tools as lhd
-from . import tiles_tools
-from . import point_cloud_tools
+from .lidar_hd import tiles_tools, point_cloud_tools
 import geopandas as gpd
 import pickle
 import os
@@ -147,10 +146,12 @@ if __name__ == "__main__":
                     plt.show()
 
                 elif a == "d":
-                    dataset = tiles_tools.compute_subproducts(dataset,
-                                                                  dataset.rio.resolution()[0]
-                                                                  )
-                    dataset = point_cloud_tools.get_vegetation_cover(dataset, clouds)
+                    data_type = input("Choose a digital model to use for derivation of extra-layers (DSM/DEM): ")
+                    if data_type not in ["DSM", "DEM"]:
+                        print("Invalid data name.")
+                    else:
+                        dataset = tiles_tools.compute_subproducts(dataset, data_type)
+                        dataset = point_cloud_tools.get_vegetation_cover(dataset, clouds)
                 else:
                     pass
 

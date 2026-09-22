@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lidar_hd_tools"
-version = "0.1.8"
+version = "0.2.0"
 authors = [
   { name="Thibault Chardon", email="pypi.flaxseed411@passinbox.com" },
 ]
