@@ -1,1 +1,1 @@
-master_doc = "README"
+master_doc = "ReadMe.md"
