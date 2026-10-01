@@ -3,6 +3,8 @@ from rasterio.io import MemoryFile
 import rioxarray as rxr
 import xarray as xr
 from typing import Optional
+import numpy as np
+from .utils import split_bbox
 
 
 def get_orthoimage(
@@ -36,26 +38,42 @@ def get_orthoimage(
     ymin = dataset.y[-1].values
     ymax = dataset.y[0].values
 
-    # download WMS data
-    img = wms.getmap(layers=[layer],
-                     size=(len(dataset.x), len(dataset.y)),
-                     bbox=(xmin, ymin, xmax, ymax),
-                     srs=f"EPSG:{dataset.rio.crs.to_epsg()}",
-                     format='image/geotiff')
+    tiles = split_bbox(xmin, ymin, xmax, ymax, width=len(dataset.x), height=len(dataset.y))
 
-    # save as a rioxarray instance
-    with MemoryFile(img) as memfile:
-        orthophoto = rxr.open_rasterio(memfile).squeeze()
-        orthophoto = orthophoto.rename({"band": "channel"})
-        orthophoto.coords["channel"] = ["red", "green", "blue"]
-        orthophoto.assign_attrs({"standard_name": "Orthographic image",
-                                 "original resolution": "20 cm",
-                                 "units": "no units"})
+    ortho = np.zeros((3, len(dataset.y), len(dataset.x)), dtype=np.uint8)
 
-        dataset["orthoimage"] = xr.DataArray(
-            data=orthophoto.data,
-            attrs=orthophoto.attrs,
-            dims=('channel', 'y', 'x')
+    for tile in tiles:
+
+        img = wms.getmap(
+            layers=[layer],
+            size=tile["size"],
+            bbox=tile["bbox"],
+            srs=f"EPSG:{dataset.rio.crs.to_epsg()}",
+            format="image/geotiff"
         )
+
+        with MemoryFile(img.read()) as memfile:
+            tile_data = (
+                rxr.open_rasterio(memfile)
+                .squeeze()
+                .values
+            )
+
+        ortho[:,tile["row_slice"],tile["col_slice"]] = tile_data
+
+    dataset["orthoimage"] = xr.DataArray(
+        data=ortho,
+        coords={
+            "channel": ["red", "green", "blue"],
+            "y": dataset.y,
+            "x": dataset.x,
+        },
+        dims=("channel", "y", "x"),
+        attrs={
+            "standard_name": "Orthographic image",
+            "original resolution": "20 cm",
+            "units": "no units",
+        },
+    )
 
     return dataset

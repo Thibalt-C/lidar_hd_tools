@@ -24,7 +24,7 @@ __all__ = [
     "visualisation"
 ]
 
-from .lidar_hd import download_data, current_folders, change_folder
+from .lidar_hd import download_data, current_folders, change_folder, folders
 from .IGN_extra import get_buildings_mask, get_water_mask, get_land_occupation, get_orthoimage
 from .utils import clip_dataset, compress_dataset, geodataframe_from_coordinates
 from . import visualisation

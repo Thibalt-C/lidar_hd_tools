@@ -26,7 +26,9 @@ def clip_dataset(
         Clipped dataset
     """
 
-    dataset = dataset.rio.clip(gdf.geometry.values, gdf.crs, drop=True)
+    gdf_reprojected = gdf.to_crs(dataset.rio.crs) # avoids to reproject the raster instead of the geodataframe
+
+    dataset = dataset.rio.clip(gdf_reprojected.geometry.values, gdf_reprojected.crs, drop=True)
 
     mask = np.where(np.isfinite(dataset.DSM.values), True, False)
 

@@ -4,6 +4,7 @@ import rioxarray as rxr
 import xarray as xr
 import numpy as np
 from typing import Optional
+from .utils import split_bbox
 
 
 def get_land_occupation(
@@ -36,70 +37,84 @@ def get_land_occupation(
     ymin = dataset.y[-1].values
     ymax = dataset.y[0].values
 
+    tiles = split_bbox(xmin, ymin, xmax, ymax, width=len(dataset.x), height=len(dataset.y))
+
+    vegetalised = np.empty((len(dataset.y), len(dataset.x)), dtype=np.uint8)
+    mineralised = vegetalised.copy()
+    water_mask = vegetalised.copy()
+    artificial = vegetalised.copy()
+
     wms = WebMapService(url, version="1.3.0")
 
-    img = wms.getmap(layers=[layer],
-                         size=(len(dataset.x), len(dataset.y)),
-                         bbox=(xmin, ymin, xmax, ymax),
-                         srs=f"EPSG:{dataset.rio.crs.to_epsg()}",
-                         format='image/geotiff')
+    for tile in tiles:
 
-    with MemoryFile(img) as memfile:
-        land_occupation = rxr.open_rasterio(memfile).squeeze()
+        img = wms.getmap(layers=[layer],
+                             size=tile["size"],
+                             bbox=tile["bbox"],
+                             srs=f"EPSG:{dataset.rio.crs.to_epsg()}",
+                             format='image/geotiff')
 
-        r = land_occupation.sel(band=1).values
-        g = land_occupation.sel(band=2).values
-        b = land_occupation.sel(band=3).values
-        rgb = np.stack([r, g, b],axis=-1)
+        with MemoryFile(img) as memfile:
+            land_occupation = rxr.open_rasterio(memfile).squeeze()
 
-        red = (rgb[:,:,0]>rgb[:,:,1]) & (rgb[:,:,0]>rgb[:,:,2])
-        red_mask = np.where(red, True, False)
+            r = land_occupation.sel(band=1).values
+            g = land_occupation.sel(band=2).values
+            b = land_occupation.sel(band=3).values
+            rgb = np.stack([r, g, b],axis=-1)
 
-        blue = (rgb[:,:,2]>rgb[:,:,0]) & (rgb[:,:,2]>rgb[:,:,1])
-        blue_mask = np.where(blue, True, False)
+            red = (rgb[:,:,0]>rgb[:,:,1]) & (rgb[:,:,0]>rgb[:,:,2])
+            red_mask = np.where(red, True, False)
 
-        green = (rgb[:,:,1]>rgb[:,:,0]) & (rgb[:,:,1]>rgb[:,:,2])
-        green_mask = np.where(green, True, False)
+            blue = (rgb[:,:,2]>rgb[:,:,0]) & (rgb[:,:,2]>rgb[:,:,1])
+            blue_mask = np.where(blue, True, False)
 
-        #yellow = (rgb[:,:,0]>rgb[:,:,2]) & (rgb[:,:,1]>rgb[:,:,2]) & (rgb[:,:,2]>150)
-        yellow_mask = np.where((~red)&(~green)&(~blue), True, False)
+            green = (rgb[:,:,1]>rgb[:,:,0]) & (rgb[:,:,1]>rgb[:,:,2])
+            green_mask = np.where(green, True, False)
 
-        dataset["vegetalized"] = xr.DataArray(green_mask,
-                                              dims=('y', 'x'),
-                                              attrs={"standard_name": "Vegetation/grass pixels",
-                                                     "units": "no units",
-                                                     "plot_kwargs": {"cmap": "Greens",
-                                                                     "add_colorbar": False
-                                                                     }
-                                                     }
-                                              )
-        dataset["mineralized"] = xr.DataArray(yellow_mask,
-                                              dims=('y', 'x'),
-                                              attrs={"standard_name": "Mineralized pixels",
-                                                     "units": "no units",
-                                                     "plot_kwargs": {"cmap": "Greys",
-                                                                     "add_colorbar": False
-                                                                     }
-                                                     }
-                                              )
-        dataset["water_mask"] = xr.DataArray(blue_mask,
-                                              dims=('y', 'x'),
-                                              attrs={"standard_name": "Water pixels",
-                                                     "units": "no units",
-                                                     "plot_kwargs": {"cmap": "Blues",
-                                                                     "add_colorbar": False
-                                                                     }
-                                                     }
-                                              )
+            #yellow = (rgb[:,:,0]>rgb[:,:,2]) & (rgb[:,:,1]>rgb[:,:,2]) & (rgb[:,:,2]>150)
+            yellow_mask = np.where((~red)&(~green)&(~blue), True, False)
 
-        dataset["artificial"] = xr.DataArray(red_mask,
-                                              dims=('y', 'x'),
-                                              attrs={"standard_name": "Artificial pixels",
-                                                     "units": "no units",
-                                                     "plot_kwargs": {"cmap": "Reds",
-                                                                     "add_colorbar": False
-                                                                     }
-                                                     }
-                                              )
+        vegetalised[tile["row_slice"], tile["col_slice"]] = green_mask
+        mineralised[tile["row_slice"], tile["col_slice"]] = yellow_mask
+        water_mask[tile["row_slice"], tile["col_slice"]] = blue_mask
+        artificial[tile["row_slice"], tile["col_slice"]] = red_mask
+
+    dataset["vegetalized"] = xr.DataArray(vegetalised,
+                                          dims=('y', 'x'),
+                                          attrs={"standard_name": "Vegetation/grass pixels",
+                                                 "units": "no units",
+                                                 "plot_kwargs": {"cmap": "Greens",
+                                                                 "add_colorbar": False
+                                                                 }
+                                                 }
+                                          )
+    dataset["mineralized"] = xr.DataArray(mineralised,
+                                          dims=('y', 'x'),
+                                          attrs={"standard_name": "Mineralized pixels",
+                                                 "units": "no units",
+                                                 "plot_kwargs": {"cmap": "Greys",
+                                                                 "add_colorbar": False
+                                                                 }
+                                                 }
+                                          )
+    dataset["water_mask"] = xr.DataArray(water_mask,
+                                          dims=('y', 'x'),
+                                          attrs={"standard_name": "Water pixels",
+                                                 "units": "no units",
+                                                 "plot_kwargs": {"cmap": "Blues",
+                                                                 "add_colorbar": False
+                                                                 }
+                                                 }
+                                          )
+
+    dataset["artificial"] = xr.DataArray(artificial,
+                                          dims=('y', 'x'),
+                                          attrs={"standard_name": "Artificial pixels",
+                                                 "units": "no units",
+                                                 "plot_kwargs": {"cmap": "Reds",
+                                                                 "add_colorbar": False
+                                                                 }
+                                                 }
+                                          )
 
     return dataset
