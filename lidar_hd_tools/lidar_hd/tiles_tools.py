@@ -104,12 +104,20 @@ def dem_dsm_xarray(
 def compute_subproducts(
         dataset : xr.Dataset,
         data_for_derivation : Optional[str] = "DSM",
+        azimuth_resolution : Optional[float] = 22.5,
+        elevation_resolution : Optional[float] = 5.0,
         verbose : Optional[bool] = True
 ) -> xr.Dataset :
 
     resolution = dataset.rio.resolution()[0]
 
-    dataset = add_shadow(dataset, resolution=resolution, data_for_derivation=data_for_derivation, verbose=verbose)
+    dataset = add_shadow(dataset,
+                         resolution=resolution,
+                         data_for_derivation=data_for_derivation,
+                         azimuth_resolution=azimuth_resolution,
+                         elevation_resolution=elevation_resolution,
+                         verbose=verbose
+                         )
 
     if verbose:
         print("Computing DHM, SVF, slope gradient, slope aspect...")

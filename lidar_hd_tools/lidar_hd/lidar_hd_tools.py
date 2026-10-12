@@ -15,6 +15,8 @@ def download_data(
         lidar_decimation_factor : Optional[int] = 10,
         build_dataset : Optional[bool] = True,
         data_for_derivation : Optional[str] = "DSM",
+        shadow_azimuth_resolution : Optional[float] = 22.5,
+        shadow_elevation_resolution : Optional[float] = 5.0,
         threshold_for_warning : Optional[int] = 10,
         verbose : Optional[bool] = True
 ) -> Union[Dataset, Tuple[Dataset, List[LasData]]] :
@@ -34,6 +36,10 @@ def download_data(
         whether to compute extra layers or not. Default is True.
     data_for_derivation : string, optional
         digital model to be used to derive part of the extra layers. Must be one of "DSM" or "DEM". The default is "DSM".
+    shadow_azimuth_resolution : float, optional
+        resolution in degrees of the azimuth angle used to compute the shadows. The default is 22.5.
+    shadow_elevation_resolution : float, optional
+        resolution in degrees of the elevation angle used to compute the shadows. The default is 5.0.
     threshold_for_warning : int, optional
         threshold number of tiles at which a warning is raised. Default is 10.
     verbose : bool, optional
@@ -83,6 +89,8 @@ def download_data(
 
         dataset = compute_subproducts(unbuilt_dataset,
                                       data_for_derivation=data_for_derivation,
+                                      azimuth_resolution=shadow_azimuth_resolution,
+                                      elevation_resolution=shadow_elevation_resolution,
                                       verbose=verbose)
         dataset = get_vegetation_cover(dataset, clouds, verbose=verbose)
         dataset = clip_dataset(dataset, gdf)

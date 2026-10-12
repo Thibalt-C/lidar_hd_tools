@@ -88,4 +88,10 @@ def change_folder(
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(folders, f, indent=4)
 
+    global lidar_tiles, DSM_tiles, DEM_tiles
+
+    lidar_tiles = folders["lidar"]
+    DSM_tiles = folders["DSM"]
+    DEM_tiles = folders["DEM"]
+
     return print(f"-> Saved {key} folder location to {folders[key]}")

@@ -96,11 +96,15 @@ def add_shadow(
         dataset : xr.Dataset,
         resolution : float,
         data_for_derivation : str,
+        azimuth_resolution : Optional[float] = 22.5,
+        elevation_resolution : Optional[float] = 5.0,
         verbose : Optional[bool] = True
 ) -> xr.Dataset :
 
-    dataset.coords['sun_elevation'] = np.linspace(0, 90, 9)
-    dataset.coords['sun_azimuth'] = np.linspace(0, 360 - 360 / 16, 16)
+
+
+    dataset.coords['sun_elevation'] = np.arange(0, 90+elevation_resolution, elevation_resolution)
+    dataset.coords['sun_azimuth'] = np.arange(0, 360, azimuth_resolution)
     dataset.sun_elevation.attrs = {"standard_name": "Sun elevation", "units": "°"}
     dataset.sun_azimuth.attrs = {"standard_name": "Sun azimuth", "units": "°"}
 
