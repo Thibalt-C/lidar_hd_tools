@@ -4,11 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lidar_hd_tools"
-version = "0.2.2"
+version = "0.2.3"
 authors = [
   { name="Thibault Chardon", email="pypi.flaxseed411@passinbox.com" },
 ]
 description = "Python library for quick use of IGN's LiDAR-HD data."
+keywords = ["LIDAR-HD", "LiDAR", "IGN"]
 readme = "ReadMe.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -28,11 +29,19 @@ dependencies = [
 	"shapely >= 2.1.2",
 	"tqdm >=4.67.3",
 	"xarray >=2025.1.1",
+	"pvlib >=0.15.2"
 ]
 
 classifiers = [
 	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: 3.12",
+	"Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
+	"Development Status :: 5 - Production/Stable",
+	"Topic :: Scientific/Engineering :: GIS",
+	"Topic :: Scientific/Engineering :: Visualization",
+	"Topic :: Scientific/Engineering :: Image Processing"
 ]
 license = "CC0-1.0"
 license-files = ["LICENSE"]

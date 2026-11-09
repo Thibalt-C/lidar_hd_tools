@@ -6,6 +6,7 @@ from ..utils import clip_dataset, compress_dataset
 from geopandas import GeoDataFrame
 from xarray import Dataset
 from laspy import LasData
+from pandas import DatetimeIndex
 from typing import Optional, Tuple, List, Union
 
 
@@ -15,6 +16,7 @@ def download_data(
         lidar_decimation_factor : Optional[int] = 10,
         build_dataset : Optional[bool] = True,
         data_for_derivation : Optional[str] = "DSM",
+        timestamps : Optional[DatetimeIndex] = None,
         shadow_azimuth_resolution : Optional[float] = 22.5,
         shadow_elevation_resolution : Optional[float] = 5.0,
         threshold_for_warning : Optional[int] = 10,
@@ -36,10 +38,12 @@ def download_data(
         whether to compute extra layers or not. Default is True.
     data_for_derivation : string, optional
         digital model to be used to derive part of the extra layers. Must be one of "DSM" or "DEM". The default is "DSM".
+    timestamps : `pandas.DatetimeIndex`, optional
+        List of timestamps to compute the shadow. Creates a time axis. If None, all combinations of shadows are computed.
     shadow_azimuth_resolution : float, optional
-        resolution in degrees of the azimuth angle used to compute the shadows. The default is 22.5.
+        resolution in degrees of the azimuth angle used to compute the shadows if timestamps is None. The default is 22.5.
     shadow_elevation_resolution : float, optional
-        resolution in degrees of the elevation angle used to compute the shadows. The default is 5.0.
+        resolution in degrees of the elevation angle used to compute the shadows if timestamps is None. The default is 5.0.
     threshold_for_warning : int, optional
         threshold number of tiles at which a warning is raised. Default is 10.
     verbose : bool, optional
@@ -89,6 +93,7 @@ def download_data(
 
         dataset = compute_subproducts(unbuilt_dataset,
                                       data_for_derivation=data_for_derivation,
+                                      timestamps=timestamps,
                                       azimuth_resolution=shadow_azimuth_resolution,
                                       elevation_resolution=shadow_elevation_resolution,
                                       verbose=verbose)

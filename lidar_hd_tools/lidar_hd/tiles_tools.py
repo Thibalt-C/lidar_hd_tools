@@ -6,6 +6,7 @@ import xarray as xr
 import rioxarray as rxr
 from cmcrameri.cm import cmaps
 from tqdm import tqdm
+from pandas import DatetimeIndex
 from rvt.vis import sky_view_factor, slope_aspect
 from .shadow import add_shadow
 from .folder_manager import DSM_tiles, DEM_tiles
@@ -106,6 +107,7 @@ def compute_subproducts(
         data_for_derivation : Optional[str] = "DSM",
         azimuth_resolution : Optional[float] = 22.5,
         elevation_resolution : Optional[float] = 5.0,
+        timestamps : Optional[DatetimeIndex] = None,
         verbose : Optional[bool] = True
 ) -> xr.Dataset :
 
@@ -114,6 +116,7 @@ def compute_subproducts(
     dataset = add_shadow(dataset,
                          resolution=resolution,
                          data_for_derivation=data_for_derivation,
+                         timestamps=timestamps,
                          azimuth_resolution=azimuth_resolution,
                          elevation_resolution=elevation_resolution,
                          verbose=verbose

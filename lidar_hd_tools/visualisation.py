@@ -7,6 +7,10 @@ import numpy as np
 from xarray import Dataset
 from pyproj import CRS
 from typing import Tuple, Optional, Union
+from matplotlib.animation import FuncAnimation
+from IPython.display import display, HTML
+import pandas as pd
+from IPython import get_ipython
 
 def get_projection(crs : CRS) -> ccrs.Projection :
     """
@@ -94,6 +98,8 @@ def plot_dataset(
 
     if to_plot.dtype == 'bool':
         to_plot = to_plot.where(to_plot, np.nan) # mask False values
+    if len(np.unique(to_plot.values)) <= 2:
+        to_plot = to_plot.where(to_plot==1, np.nan)
 
     if "mask" in dataset.data_vars:
         to_plot = to_plot.where(dataset.mask)
@@ -155,3 +161,66 @@ cartopy.mpl.geoaxes.GeoAxesSubplot] :
     plt.tight_layout()
 
     return ax
+
+
+
+def plot_timeseries(
+        dataset,
+        attribute,
+        gridlines=True,
+        orthoimage_background=False,
+        savefig=None,
+        **kwargs
+):
+
+    if "time" not in dataset.dims:
+        raise Exception("Dataset has no time dimension.")
+    if "time" not in dataset[attribute].dims:
+        raise Exception(f"Attribute {attribute} has no time dimension.")
+    if orthoimage_background & ("orthoimage" not in dataset.data_vars):
+        raise Exception("Dataset has no orthoimage.\n" +
+                        "Use `lidar_hd_tools.get_orthoimage(dataset)` to add the orthoimage.")
+
+    dataset = dataset.where(dataset[attribute].notnull(), drop=True)
+
+    projection = get_projection(dataset.rio.crs)
+
+    vmin = float(dataset[attribute].min().values)
+    vmax = float(dataset[attribute].max().values)
+
+    fig, ax = plt.subplots(subplot_kw={"projection": projection}, figsize=(15, 12))
+
+    def update(frame, ax=ax):
+        ax.clear()
+        if orthoimage_background:
+            ax = plot_orthophoto(dataset.isel(time=0), ax=ax)
+        image = dataset.isel(time=frame)
+        ax, quadmesh = plot_dataset(image, attribute, ax=ax, gridlines=gridlines, add_colorbar=False,
+                                    **kwargs)
+        ax.set_title(f"{pd.to_datetime(image.time.values).strftime('%d-%m-%Y %H:%M')}", fontsize=25)
+        return ax
+
+    ax, quadmesh = plot_dataset(dataset.isel(time=0), attribute, ax=ax, gridlines=gridlines,
+                                **kwargs)
+    if ("standard_name" in dataset[attribute].attrs) & ("units" in dataset[attribute].attrs):
+        label = f"{dataset[attribute].attrs["standard_name"]} [{dataset[attribute].attrs['units']}]"
+    else:
+        label = attribute
+    try:
+        quadmesh.colorbar.set_label(label, fontsize=16, labelpad=-10)
+        quadmesh.colorbar.set_ticks([vmin, vmax])
+        quadmesh.colorbar.ax.tick_params(labelsize=16)
+    except:
+        pass
+    plt.draw()
+    ani = FuncAnimation(fig, update, frames=len(dataset.time), interval=500)
+    plt.tight_layout()
+    if savefig:
+        ani.save(savefig, writer="pillow", fps=5)
+    if get_ipython() is not None:
+        display(HTML(ani.to_jshtml()))
+        plt.close(fig)
+    else:
+        plt.show()
+
+    return

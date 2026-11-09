@@ -4,6 +4,8 @@ from scipy.interpolate import RectBivariateSpline
 import xarray as xr
 from cmcrameri.cm import cmaps
 from tqdm import tqdm
+from pandas import DatetimeIndex
+import pvlib
 from typing import Optional
 
 
@@ -96,15 +98,47 @@ def add_shadow(
         dataset : xr.Dataset,
         resolution : float,
         data_for_derivation : str,
+        timestamps : Optional[DatetimeIndex] = None,
         azimuth_resolution : Optional[float] = 22.5,
         elevation_resolution : Optional[float] = 5.0,
         verbose : Optional[bool] = True
 ) -> xr.Dataset :
 
 
+    if timestamps is None: # tries all combinations
 
-    dataset.coords['sun_elevation'] = np.arange(0, 90+elevation_resolution, elevation_resolution)
-    dataset.coords['sun_azimuth'] = np.arange(0, 360, azimuth_resolution)
+        dataset.coords['sun_elevation'] = np.arange(0, 90+elevation_resolution, elevation_resolution)
+        dataset.coords['sun_azimuth'] = np.arange(0, 360, azimuth_resolution)
+        sun_azimuths = dataset.coords["sun_azimuth"].values
+        sun_elevations = dataset.coords["sun_elevation"].values
+        combinations = [(az, el) for el in sun_elevations for az in sun_azimuths]
+        shadow_results = np.zeros((len(sun_elevations), len(sun_azimuths), *dataset[data_for_derivation].shape),
+                                  dtype=bool)
+        dims = ("sun_elevation", "sun_azimuth", "y", "x")
+        coords = {"sun_elevation": dataset.coords["sun_elevation"],
+                  "sun_azimuth": dataset.coords["sun_azimuth"],
+                  "y": dataset.coords["y"],
+                  "x": dataset.coords["x"]
+                  }
+
+    else: # adds time coordinate to determine the Sun's position
+        dataset.coords["time"] = timestamps.to_numpy(dtype="datetime64[ns]")
+        wgs84_coords = dataset.DSM.rio.reproject(dst_crs="EPSG:4326").coords
+        loc = pvlib.location.Location(latitude=wgs84_coords["y"].values.mean(),
+                                      longitude=wgs84_coords["x"].values.mean(),
+                                      altitude=dataset.DSM.mean().values)
+        sun_pos = loc.get_solarposition(dataset.time.values)
+        for angle in ["azimuth", "elevation"]:
+            dataset[f'sun_{angle}'] = xr.DataArray(data=sun_pos[angle].values,
+                                                    dims=["time"], coords={"time": dataset.time})
+        combinations = [(dataset.sun_azimuth.values[i], dataset.sun_elevation.values[i])
+                        for i in range(len(dataset.time))
+                        ]
+        shadow_results = np.zeros((len(dataset.time), *dataset[data_for_derivation].shape),
+                                  dtype=bool)
+        dims = ("time", "y", "x")
+        coords = {"time": dataset.time, "y": dataset.y, "x": dataset.x}
+
     dataset.sun_elevation.attrs = {"standard_name": "Sun elevation", "units": "°"}
     dataset.sun_azimuth.attrs = {"standard_name": "Sun azimuth", "units": "°"}
 
@@ -116,29 +150,22 @@ def add_shadow(
             resolution=resolution,
         ) == 0  # is shadow
 
-    sun_azimuths = dataset.coords["sun_azimuth"].values
-    sun_elevations = dataset.coords["sun_elevation"].values
-    combinations = [(az, el) for el in sun_elevations for az in sun_azimuths]
-
-    shadow_results = np.zeros((len(sun_elevations), len(sun_azimuths), *dataset[data_for_derivation].shape), dtype=bool)
-
     iter_combinations = tqdm(combinations, total=len(combinations),
                              desc="Computing shadow") if verbose else combinations
 
     for idx, (az, el) in enumerate(iter_combinations):
-        shadow_results[idx // len(sun_azimuths), idx % len(sun_azimuths)] = shadow_wrapper(
-            dataset[data_for_derivation], az, el, resolution
-        )
+        if timestamps is None:
+            shadow_results[idx // len(sun_azimuths), idx % len(sun_azimuths)] = shadow_wrapper(
+                dataset[data_for_derivation], az, el, resolution
+            )
+        else:
+            if (el <= 90) & (el >= 0):
+                shadow_results[idx] = shadow_wrapper(dataset[data_for_derivation], az, el, resolution)
 
     dataset["shadow"] = xr.DataArray(
         shadow_results,
-        dims=("sun_elevation", "sun_azimuth", "y", "x"),
-        coords={
-            "sun_elevation": dataset.coords["sun_elevation"],
-            "sun_azimuth": dataset.coords["sun_azimuth"],
-            "y": dataset.coords["y"],
-            "x": dataset.coords["x"],
-        },
+        dims=dims,
+        coords=coords
     )
 
     dataset.shadow.attrs = {'standard_name': "Shadow",
